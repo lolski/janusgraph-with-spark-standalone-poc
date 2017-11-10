@@ -1,0 +1,78 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.lolski</groupId>
+  <artifactId>janusgraph</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0-SNAPSHOT</version>
+  <name>janusgraph</name>
+  <url>http://maven.apache.org</url>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.7.0</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <!-- https://mvnrepository.com/artifact/org.janusgraph/janusgraph-cassandra -->
+    <dependency>
+      <groupId>org.janusgraph</groupId>
+      <artifactId>janusgraph-cassandra</artifactId>
+      <version>0.2.0</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.janusgraph/janusgraph-hadoop -->
+    <dependency>
+      <groupId>org.janusgraph</groupId>
+      <artifactId>janusgraph-hadoop</artifactId>
+      <version>0.2.0</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.tinkerpop/hadoop-gremlin -->
+    <dependency>
+      <groupId>org.apache.tinkerpop</groupId>
+      <artifactId>hadoop-gremlin</artifactId>
+      <version>3.2.5</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.tinkerpop/spark-gremlin -->
+    <dependency>
+      <groupId>org.apache.tinkerpop</groupId>
+      <artifactId>spark-gremlin</artifactId>
+      <version>3.2.5</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+    <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core_2.10 -->
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-core_2.10</artifactId>
+      <version>1.6.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

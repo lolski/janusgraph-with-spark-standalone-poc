@@ -1,0 +1,5 @@
+.idea
+target
+janusgraph.iml
+g-out/*
+g-in/*
