@@ -54,7 +54,7 @@
         </exclusion>
       </exclusions>
     </dependency>
-    
+
     <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core_2.10 -->
     <dependency>
       <groupId>org.apache.spark</groupId>

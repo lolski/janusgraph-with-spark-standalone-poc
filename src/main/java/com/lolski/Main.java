@@ -76,14 +76,7 @@ public class Main {
         computer.configure(Constants.GREMLIN_HADOOP_GRAPH_WRITER, "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
 //        computer.configure(Constants.GREMLIN_HADOOP_JARS_IN_DISTRIBUTED_CACHE, true);
 //        computer.configure(Constants.GREMLIN_HADOOP_DEFAULT_GRAPH_COMPUTER, "org.apache.tinkerpop.gremlin.spark.process.computer.SparkGraphComputer");
-//        computer.configure(Constants.MAPREDUCE_INPUT_FILEINPUTFORMAT_INPUTDIR, "./g-in");
-//        computer.configure(Constants.GREMLIN_HADOOP_GRAPH_INPUT_FORMAT, "./g-in");
-
-//        computer.configure(Constants.GREMLIN_HADOOP_GRAPH_INPUT_FORMAT, "");
-//        computer.configure(Constants.GREMLIN_HADOOP_GRAPH_OUTPUT_FORMAT, "");
-//        computer.configure(Constants.GREMLIN_HADOOP_JARS_IN_DISTRIBUTED_CACHE, "");
-//        computer.configure(Constants.GREMLIN_HADOOP_INPUT_LOCATION, "tinkerpop-modern.kryo");
-//        computer.configure(Constants.GREMLIN_HADOOP_OUTPUT_LOCATION, "./g-out");
+        
         return computer;
     }
 }
