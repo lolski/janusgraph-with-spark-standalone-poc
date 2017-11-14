@@ -20,9 +20,8 @@ class LocalKryo {
 
     public static Map<String, Object> newLocalKryoConfigurations() {
         Map<String, Object> map = new HashMap<>();
-        map.put(Constants.GREMLIN_HADOOP_INPUT_LOCATION, "./g-in/tinkerpop-modern.kryo");
         map.put(AppConstants.GREMLIN_GRAPH, "org.apache.tinkerpop.gremlin.hadoop.structure.HadoopGraph");
-
+        map.put(Constants.GREMLIN_HADOOP_INPUT_LOCATION, "./g-in/tinkerpop-modern.kryo");
         map.put(Constants.GREMLIN_HADOOP_GRAPH_READER, "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoInputFormat");
         map.put(Constants.GREMLIN_HADOOP_OUTPUT_LOCATION, "./g-out");
         map.put(Constants.GREMLIN_HADOOP_GRAPH_WRITER, "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
