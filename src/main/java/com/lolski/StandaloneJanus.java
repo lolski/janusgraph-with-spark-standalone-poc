@@ -8,6 +8,7 @@ import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.spark.process.computer.SparkGraphComputer;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
@@ -19,6 +20,8 @@ import java.util.UUID;
 
 public class StandaloneJanus {
     public static final String keyspace = "janusgraph";
+    public static final String outputLocation = "/Users/lolski/Playground/janusgraph/g-out/" + System.currentTimeMillis();
+    
     public static Pair<Graph, GraphComputer> newStandaloneJanusSparkComputer() {
         Map<String, Object> janusConfig = newStandaloneJanusConfigurations();
         createSimpleJanusGraph(janusConfig);
@@ -37,7 +40,7 @@ public class StandaloneJanus {
         map.put("janusgraphmr.ioformat.conf.storage.hostname", "localhost");
         map.put("janusgraphmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
         map.put("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner");
-        map.put("gremlin.hadoop.outputLocation", AppConstants.GREMLIN_HADOOP_OUTPUT_LOCATION_VALUE_STANDALONE_SPARK);
+        map.put("gremlin.hadoop.outputLocation", outputLocation);
         map.put("janusmr.ioformat.conf.storage.backend", "cassandra");
         map.put("janusmr.ioformat.cf-name", "edgestore");
         map.put("cassandra.input.columnfamily", "edgestore");
@@ -50,7 +53,7 @@ public class StandaloneJanus {
         map.put("janusmr.ioformat.conf.storage.hostname", "localhost");
         map.put("gremlin.hadoop.graphReader", "org.janusgraph.hadoop.formats.cassandra.CassandraInputFormat");
         map.put("gremlin.hadoop.inputLocation", "none");
-        map.put(AppConstants.STORAGE_BACKEND, "cassandra");
+        map.put("storage.backend", "cassandra");
 
         return map;
     }
@@ -64,14 +67,13 @@ public class StandaloneJanus {
     public static GraphComputer newStandaloneJanusSparkComputer(Graph graph) {
         SparkGraphComputer computer = graph.compute(SparkGraphComputer.class);
 
-        computer.configure(AppConstants.SPARK_MASTER, AppConstants.SPARK_MASTER_VALUE_STANDALONE);
-        computer.configure(AppConstants.SPARK_SERIALIZER, AppConstants.SPARK_SERIALIZER_VALUE);
+        computer.configure("spark.master", AppConstants.SPARK_MASTER_VALUE_STANDALONE);
 
         computer.configure("cassandra.input.keyspace", keyspace);
         computer.configure("janusgraphmr.ioformat.conf.storage.hostname", "localhost");
         computer.configure("janusgraphmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
         computer.configure("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner");
-        computer.configure("gremlin.hadoop.outputLocation", AppConstants.GREMLIN_HADOOP_OUTPUT_LOCATION_VALUE_STANDALONE_SPARK);
+        computer.configure("gremlin.hadoop.outputLocation", outputLocation);
         computer.configure("janusmr.ioformat.conf.storage.backend", "cassandra");
         computer.configure("janusmr.ioformat.cf-name", "edgestore");
         computer.configure("cassandra.input.columnfamily", "edgestore");
@@ -84,7 +86,7 @@ public class StandaloneJanus {
         computer.configure("janusmr.ioformat.conf.storage.hostname", "localhost");
         computer.configure("gremlin.hadoop.graphReader", "org.janusgraph.hadoop.formats.cassandra.CassandraInputFormat");
         computer.configure("gremlin.hadoop.inputLocation", "none");
-        computer.configure(AppConstants.STORAGE_BACKEND, "cassandra");
+        computer.configure("storage.backend", "cassandra");
 
         return computer;
     }
@@ -103,10 +105,15 @@ public class StandaloneJanus {
         JanusGraph graph = JanusGraphFactory.open(config);
         JanusGraphTransaction tx = graph.newTransaction();
 
-        tx.addVertex(T.label, "wo");
-        tx.addVertex(T.label, "ng");
-        tx.addVertex(T.label, "liang");
-        tx.addVertex(T.label, "zan");
+//        Vertex wlz = tx.addVertex(T.label, "person", "name", "wong liang zan");
+//        Vertex ak = tx.addVertex(T.label, "person", "name", "angkur");
+//        Vertex ngy = tx.addVertex(T.label, "person", "name", "naq gynes");
+//        Vertex crl = tx.addVertex(T.label, "person", "name", "curl");
+//        wlz.addEdge("boss_of", ak);
+//        wlz.addEdge("boss_of", ngy);
+//        wlz.addEdge("boss_of", ngy);
+//        wlz.addEdge("boss_of", crl);
+
         tx.commit();
 
         return graph;
