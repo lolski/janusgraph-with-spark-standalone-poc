@@ -11,8 +11,8 @@ class AppConstants {
     public static final String SPARK_SERIALIZER = "spark.serializer";
     public static final String SPARK_SERIALIZER_VALUE = "org.apache.spark.serializer.KryoSerializer";
 
-    public static final String SPARK_EXECUTOR_MEMORY = "spark.executor.memory";
-
+    public static final String STORAGE_HOSTNAME = "storage.hostname";
+    public static final String STORAGE_BACKEND = "storage.backend";
     public static final String STORAGE_CASSANDRA_KEYSPACE = "storage.cassandra.keyspace";
     public static final String JANUSMR_IOFORMAT_CONF_STORAGE_CASSANDRA_KEYSPACE = "janusgraphmr.ioformat.conf.storage.cassandra.keyspace";
 
