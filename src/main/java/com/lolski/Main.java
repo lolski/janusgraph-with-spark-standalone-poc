@@ -28,14 +28,14 @@ import static com.lolski.Helpers.*;
  */
 public class Main {
     private static final String CONFIG_PROPERTIES_PATH = "config.properties";
-    private static final String SPARK_MASTER = "local[1]"; // spark://127.0.0.1:5678
+    private static final String SPARK_MASTER = "spark://127.0.0.1:5678";
 
     private static final Map<String, Object> configurations = newDefaultConfigurations();
 
     public static void main( String[] args ) throws InterruptedException, ExecutionException {
 //        printClasspath();
         Graph hadoopGraph = loadTinkerpopKyro();
-        GraphComputer computer = getConfiguredSparkGraphComputer(hadoopGraph);
+        GraphComputer computer = getConfiguredSparkGraphComputerStandaloneKryo(hadoopGraph);
 
         p("--- PROGRAM STARTING --- ");
         computer.program(PeerPressureVertexProgram.build().create(hadoopGraph)).mapReduce(ClusterPopulationMapReduce.build().create());
@@ -70,9 +70,10 @@ public class Main {
     public static Map<String, Object> newDefaultConfigurations() {
         Map<String, Object> map = new HashMap<>();
         map.put(AppConstants.SPARK_MASTER, Main.SPARK_MASTER);
-//        map.put("spark.executor.memory", "1g");
-//        map.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+        map.put(AppConstants.SPARK_EXECUTOR_MEMORY, "1g");
+        map.put(AppConstants.SPARK_SERIALIZER, "org.apache.spark.serializer.KryoSerializer");
 
+        map.put(Constants.GREMLIN_HADOOP_INPUT_LOCATION, "./g-in/tinkerpop-modern.kryo");
         map.put(Constants.GREMLIN_HADOOP_GRAPH_READER, "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoInputFormat");
         map.put(Constants.GREMLIN_HADOOP_OUTPUT_LOCATION, "./g-out");
         map.put(Constants.GREMLIN_HADOOP_GRAPH_WRITER, "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
@@ -80,16 +81,22 @@ public class Main {
         return map;
     }
 
-    public static GraphComputer getConfiguredSparkGraphComputer(Graph graph) {
+    public static GraphComputer getConfiguredSparkGraphComputerLocal(Graph graph) {
         SparkGraphComputer computer = graph.compute(SparkGraphComputer.class);
         computer.configure(AppConstants.SPARK_MASTER, configurations.get(AppConstants.SPARK_MASTER));
-//        computer.configure("spark.executor.memory", configurations.get("spark.executor.memory"));
-//        computer.configure("spark.serializer", configurations.get("spark.serializer"));
+        return computer;
+    }
 
-//        computer.configure(Constants.GREMLIN_HADOOP_INPUT_LOCATION, configurations.get(Constants.GREMLIN_HADOOP_INPUT_LOCATION));
-//        computer.configure(Constants.GREMLIN_HADOOP_GRAPH_READER, configurations.get(Constants.GREMLIN_HADOOP_GRAPH_READER));
-//        computer.configure(Constants.GREMLIN_HADOOP_OUTPUT_LOCATION, configurations.get(Constants.GREMLIN_HADOOP_OUTPUT_LOCATION));
-//        computer.configure(Constants.GREMLIN_HADOOP_GRAPH_WRITER, configurations.get(Constants.GREMLIN_HADOOP_GRAPH_WRITER));
+    public static GraphComputer getConfiguredSparkGraphComputerStandaloneKryo(Graph graph) {
+        SparkGraphComputer computer = graph.compute(SparkGraphComputer.class);
+        computer.configure(AppConstants.SPARK_MASTER, configurations.get(AppConstants.SPARK_MASTER));
+        computer.configure(AppConstants.SPARK_EXECUTOR_MEMORY, configurations.get(AppConstants.SPARK_EXECUTOR_MEMORY));
+        computer.configure(AppConstants.SPARK_SERIALIZER, configurations.get(AppConstants.SPARK_SERIALIZER));
+
+        computer.configure(Constants.GREMLIN_HADOOP_INPUT_LOCATION, configurations.get(Constants.GREMLIN_HADOOP_INPUT_LOCATION));
+        computer.configure(Constants.GREMLIN_HADOOP_GRAPH_READER, configurations.get(Constants.GREMLIN_HADOOP_GRAPH_READER));
+        computer.configure(Constants.GREMLIN_HADOOP_OUTPUT_LOCATION, configurations.get(Constants.GREMLIN_HADOOP_OUTPUT_LOCATION));
+        computer.configure(Constants.GREMLIN_HADOOP_GRAPH_WRITER, configurations.get(Constants.GREMLIN_HADOOP_GRAPH_WRITER));
 //        computer.configure(Constants.GREMLIN_HADOOP_JARS_IN_DISTRIBUTED_CACHE, configurations.get(Constants.GREMLIN_HADOOP_JARS_IN_DISTRIBUTED_CACHE));
 //        computer.configure(Constants.GREMLIN_HADOOP_DEFAULT_GRAPH_COMPUTER, configurations.get(Constants.GREMLIN_HADOOP_DEFAULT_GRAPH_COMPUTER));
 
@@ -98,8 +105,12 @@ public class Main {
 }
 
 class AppConstants {
-    public static final String SPARK_MASTER = "spark.master";
     public static final String GREMLIN_GRAPH = "gremlin.graph";
+
+    public static final String SPARK_MASTER = "spark.master";
+    public static final String SPARK_SERIALIZER = "spark.serializer";
+    public static final String SPARK_EXECUTOR_MEMORY = "spark.executor.memory";
+
     public static final String STORAGE_CASSANDRA_KEYSPACE = "storage.cassandra.keyspace";
     public static final String JANUSMR_IOFORMAT_CONF_STORAGE_CASSANDRA_KEYSPACE = "janusgraphmr.ioformat.conf.storage.cassandra.keyspace";
 }
