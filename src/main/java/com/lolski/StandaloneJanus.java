@@ -34,15 +34,22 @@ public class StandaloneJanus {
         Map<String, Object> map = new HashMap<>();
 
         map.put("cassandra.input.keyspace", keyspace);
+        map.put("janusgraphmr.ioformat.conf.storage.hostname", "localhost");
         map.put("janusgraphmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
+        map.put("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner");
+        map.put("gremlin.hadoop.outputLocation", AppConstants.GREMLIN_HADOOP_OUTPUT_LOCATION_VALUE_STANDALONE_SPARK);
+        map.put("janusmr.ioformat.conf.storage.backend", "cassandra");
         map.put("janusmr.ioformat.cf-name", "edgestore");
         map.put("cassandra.input.columnfamily", "edgestore");
         map.put("janusmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
+        map.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
         map.put("gremlin.graph", "org.apache.tinkerpop.gremlin.hadoop.structure.HadoopGraph");
         map.put("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
         map.put("storage.hostname", "localhost");
         map.put("janusgraphmr.ioformat.conf.storage.backend", "cassandra");
         map.put("janusmr.ioformat.conf.storage.hostname", "localhost");
+        map.put("gremlin.hadoop.graphReader", "org.janusgraph.hadoop.formats.cassandra.CassandraInputFormat");
+        map.put("gremlin.hadoop.inputLocation", "none");
         map.put(AppConstants.STORAGE_BACKEND, "cassandra");
 
         return map;
@@ -56,6 +63,7 @@ public class StandaloneJanus {
 
     public static GraphComputer newStandaloneJanusSparkComputer(Graph graph) {
         SparkGraphComputer computer = graph.compute(SparkGraphComputer.class);
+
         computer.configure(AppConstants.SPARK_MASTER, AppConstants.SPARK_MASTER_VALUE_STANDALONE);
         computer.configure(AppConstants.SPARK_SERIALIZER, AppConstants.SPARK_SERIALIZER_VALUE);
 
@@ -94,8 +102,13 @@ public class StandaloneJanus {
         Configuration config = new MapConfiguration(configuration);
         JanusGraph graph = JanusGraphFactory.open(config);
         JanusGraphTransaction tx = graph.newTransaction();
+
         tx.addVertex(T.label, "wo");
+        tx.addVertex(T.label, "ng");
+        tx.addVertex(T.label, "liang");
+        tx.addVertex(T.label, "zan");
         tx.commit();
+
         return graph;
     }
 //
