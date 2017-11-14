@@ -20,7 +20,8 @@ import static com.lolski.Helpers.*;
  */
 public class Main {
     public static void main( String[] args ) throws InterruptedException, ExecutionException {
-        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneKryo.newStandaloneKryoSparkComputer();
+        Pair<Graph, GraphComputer> graphAndGraphComputer = LocalKryo.newLocalKryoSparkComputer();
+        //        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneKryo.newStandaloneKryoSparkComputer();
         Graph graph = graphAndGraphComputer.getLeft();
         GraphComputer graphComputer = graphAndGraphComputer.getRight();
 
