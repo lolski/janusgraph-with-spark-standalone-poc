@@ -15,9 +15,10 @@ import org.janusgraph.example.GraphOfTheGodsFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class StandaloneJanus {
-    public static final String keyspace = "wow-" + System.currentTimeMillis();
+    public static final String keyspace = generateUniqueKeyspaceName();
     public static Pair<Graph, GraphComputer> newStandaloneJanusSparkComputer() {
         Map<String, Object> janusConfig = newStandaloneJanusConfigurations();
         loadGraphOfTheGodsGraph(janusConfig);
@@ -64,6 +65,10 @@ public class StandaloneJanus {
     public static HadoopGraph loadFromJanus(Map<String, Object> configuration) {
         Graph hadoopGraph = GraphFactory.open(configuration);
         return (HadoopGraph) hadoopGraph;
+    }
+
+    public static String generateUniqueKeyspaceName() {
+        return ("wow-" + UUID.randomUUID()).replace("-", "").substring(0, 15);
     }
 
 }
