@@ -13,15 +13,12 @@ import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.example.GraphOfTheGodsFactory;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
+import static com.lolski.Helpers.*;
 
 /**
  * Hello world with JanusGraph & Spark Standalone!
@@ -37,9 +34,7 @@ public class Main {
 
     public static void main( String[] args ) throws InterruptedException, ExecutionException {
 //        printClasspath();
-        JanusGraph janusGraph = loadGraphOfTheGodsGraph();
-        janusGraph.newTransaction().commit();
-        Graph hadoopGraph = loadFromJanus();
+        Graph hadoopGraph = loadTinkerpopKyro();
         GraphComputer computer = getConfiguredSparkGraphComputer(hadoopGraph);
 
         p("--- PROGRAM STARTING --- ");
@@ -85,45 +80,20 @@ public class Main {
         return map;
     }
 
-    public static void p(String print) {
-        System.out.println(print);
-    }
-
-    public static void printClasspath() {
-        ClassLoader cl = ClassLoader.getSystemClassLoader();
-
-        URL[] urls = ((URLClassLoader)cl).getURLs();
-
-        for(URL url: urls){
-            System.out.println(url.getFile());
-        }
-    }
-
     public static GraphComputer getConfiguredSparkGraphComputer(Graph graph) {
         SparkGraphComputer computer = graph.compute(SparkGraphComputer.class);
         computer.configure(AppConstants.SPARK_MASTER, configurations.get(AppConstants.SPARK_MASTER));
 //        computer.configure("spark.executor.memory", configurations.get("spark.executor.memory"));
 //        computer.configure("spark.serializer", configurations.get("spark.serializer"));
 
-        computer.configure(Constants.GREMLIN_HADOOP_INPUT_LOCATION, configurations.get(Constants.GREMLIN_HADOOP_INPUT_LOCATION));
-        computer.configure(Constants.GREMLIN_HADOOP_GRAPH_READER, configurations.get(Constants.GREMLIN_HADOOP_GRAPH_READER));
-        computer.configure(Constants.GREMLIN_HADOOP_OUTPUT_LOCATION, configurations.get(Constants.GREMLIN_HADOOP_OUTPUT_LOCATION));
-        computer.configure(Constants.GREMLIN_HADOOP_GRAPH_WRITER, configurations.get(Constants.GREMLIN_HADOOP_GRAPH_WRITER));
+//        computer.configure(Constants.GREMLIN_HADOOP_INPUT_LOCATION, configurations.get(Constants.GREMLIN_HADOOP_INPUT_LOCATION));
+//        computer.configure(Constants.GREMLIN_HADOOP_GRAPH_READER, configurations.get(Constants.GREMLIN_HADOOP_GRAPH_READER));
+//        computer.configure(Constants.GREMLIN_HADOOP_OUTPUT_LOCATION, configurations.get(Constants.GREMLIN_HADOOP_OUTPUT_LOCATION));
+//        computer.configure(Constants.GREMLIN_HADOOP_GRAPH_WRITER, configurations.get(Constants.GREMLIN_HADOOP_GRAPH_WRITER));
 //        computer.configure(Constants.GREMLIN_HADOOP_JARS_IN_DISTRIBUTED_CACHE, configurations.get(Constants.GREMLIN_HADOOP_JARS_IN_DISTRIBUTED_CACHE));
 //        computer.configure(Constants.GREMLIN_HADOOP_DEFAULT_GRAPH_COMPUTER, configurations.get(Constants.GREMLIN_HADOOP_DEFAULT_GRAPH_COMPUTER));
 
         return computer;
-    }
-
-    public static Properties loadConfigProperties(String configPath) {
-        try {
-            FileInputStream inputStream = new FileInputStream(configPath);
-            Properties config = new Properties();
-            config.load(inputStream);
-            return config;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
 
@@ -133,3 +103,4 @@ class AppConstants {
     public static final String STORAGE_CASSANDRA_KEYSPACE = "storage.cassandra.keyspace";
     public static final String JANUSMR_IOFORMAT_CONF_STORAGE_CASSANDRA_KEYSPACE = "janusgraphmr.ioformat.conf.storage.cassandra.keyspace";
 }
+
