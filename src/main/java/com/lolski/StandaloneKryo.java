@@ -42,7 +42,7 @@ public class StandaloneKryo {
         return computer;
     }
 
-//    public static JanusGraph loadGraphOfTheGodsGraph() {
+//    public static JanusGraph createGraphOfTheGodsGraph() {
 //        JanusGraph graph = JanusGraphFactory.open(CONFIG_PROPERTIES_PATH);
 //        GraphOfTheGodsFactory.loadWithoutMixedIndex(graph, false);
 //        return graph;

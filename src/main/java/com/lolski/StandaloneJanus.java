@@ -1,19 +1,17 @@
 package com.lolski;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration2.ConfigurationConverter;
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.tinkerpop.gremlin.hadoop.Constants;
 import org.apache.tinkerpop.gremlin.hadoop.structure.HadoopGraph;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.spark.process.computer.SparkGraphComputer;
 import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.JanusGraphTransaction;
-import org.janusgraph.example.GraphOfTheGodsFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +21,7 @@ public class StandaloneJanus {
     public static final String keyspace = "janusgraph";
     public static Pair<Graph, GraphComputer> newStandaloneJanusSparkComputer() {
         Map<String, Object> janusConfig = newStandaloneJanusConfigurations();
-        loadGraphOfTheGodsGraph(janusConfig);
+        createSimpleJanusGraph(janusConfig);
 
         Map<String, Object> hadoopConfig = newJanusHadoopConfiguration(janusConfig);
         HadoopGraph hadoopGraph = loadFromJanus(hadoopConfig);
@@ -103,7 +101,7 @@ public class StandaloneJanus {
         return computer;
     }
 
-    public static JanusGraph loadGraphOfTheGodsGraph(Map<String, Object> configuration) {
+    public static JanusGraph createGraphOfTheGodsGraph(Map<String, Object> configuration) {
         Configuration config = new MapConfiguration(configuration);
         JanusGraph graph = JanusGraphFactory.open(config);
         JanusGraphTransaction tx = graph.newTransaction();
@@ -112,10 +110,11 @@ public class StandaloneJanus {
         return graph;
     }
 
-    public static JanusGraph loadGraphOfTheGodsGraph2(Map<String, Object> configuration) {
+    public static Graph createSimpleJanusGraph(Map<String, Object> configuration) {
         Configuration config = new MapConfiguration(configuration);
         JanusGraph graph = JanusGraphFactory.open(config);
         JanusGraphTransaction tx = graph.newTransaction();
+        tx.addVertex(T.label, "wo");
         tx.commit();
         return graph;
     }
