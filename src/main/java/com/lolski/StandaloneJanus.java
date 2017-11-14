@@ -32,33 +32,17 @@ public class StandaloneJanus {
 
     public static Map<String, Object> newStandaloneJanusConfigurations() {
         Map<String, Object> map = new HashMap<>();
-//        map.put(AppConstants.STORAGE_HOSTNAME, "localhost");
-//        map.put(AppConstants.STORAGE_BACKEND, "cassandra");
-//        map.put(AppConstants.STORAGE_CASSANDRA_KEYSPACE, keyspace);
-//        map.put(AppConstants.GREMLIN_GRAPH, AppConstants.GREMLIN_GRAPH_VALUE_HADOOP);
-//        map.put(Constants.GREMLIN_HADOOP_INPUT_LOCATION, null);
 
         map.put("cassandra.input.keyspace", keyspace);
-//        map.put("gremlin.hadoop.jarsInDistributedCache", true);
-//        map.put("cassandra.input.predicate", "0c00020b0001000000000b000200000000020003000800047fffffff0000");
-//        map.put("janusgraphmr.ioformat.cf-name", "edgestore");
-//        map.put("janusgraphmr.ioformat.conf.storage.hostname", "localhost");
-//        map.put("cassandra.thrift.framed.size_mb", 1024);
         map.put("janusgraphmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
-//        map.put("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner");
-//        map.put("gremlin.hadoop.outputLocation", AppConstants.GREMLIN_HADOOP_OUTPUT_LOCATION_VALUE_STANDALONE_SPARK);
-//        map.put("janusmr.ioformat.conf.storage.backend", "cassandra");
         map.put("janusmr.ioformat.cf-name", "edgestore");
         map.put("cassandra.input.columnfamily", "edgestore");
         map.put("janusmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
-//        map.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
         map.put("gremlin.graph", "org.apache.tinkerpop.gremlin.hadoop.structure.HadoopGraph");
         map.put("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
         map.put("storage.hostname", "localhost");
         map.put("janusgraphmr.ioformat.conf.storage.backend", "cassandra");
         map.put("janusmr.ioformat.conf.storage.hostname", "localhost");
-//        map.put("gremlin.hadoop.graphReader", "org.janusgraph.hadoop.formats.cassandra.CassandraInputFormat");
-//        map.put("gremlin.hadoop.inputLocation", "none");
         map.put(AppConstants.STORAGE_BACKEND, "cassandra");
 
         return map;
@@ -76,11 +60,7 @@ public class StandaloneJanus {
         computer.configure(AppConstants.SPARK_SERIALIZER, AppConstants.SPARK_SERIALIZER_VALUE);
 
         computer.configure("cassandra.input.keyspace", keyspace);
-//        computer.configure("gremlin.hadoop.jarsInDistributedCache", true);
-//        computer.configure("cassandra.input.predicate", "0c00020b0001000000000b000200000000020003000800047fffffff0000");
-//        computer.configure("janusgraphmr.ioformat.cf-name", "edgestore");
         computer.configure("janusgraphmr.ioformat.conf.storage.hostname", "localhost");
-//        computer.configure("cassandra.thrift.framed.size_mb", 1024);
         computer.configure("janusgraphmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
         computer.configure("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner");
         computer.configure("gremlin.hadoop.outputLocation", AppConstants.GREMLIN_HADOOP_OUTPUT_LOCATION_VALUE_STANDALONE_SPARK);
