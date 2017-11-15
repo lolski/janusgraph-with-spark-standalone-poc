@@ -17,7 +17,7 @@ import static com.lolski.Helpers.p;
  */
 public class MainTest {
     public void a() throws InterruptedException, ExecutionException {
-        Pair<Graph, GraphComputer> graphAndGraphComputer = LocalSparkWithKryoHadoopGraph.newLocalKryoSparkComputer();
+        Pair<Graph, GraphComputer> graphAndGraphComputer = LocalSparkWithKryoHadoopGraph.newLocalSparkWithKryoHadoopGraph();
 
         Graph graph = graphAndGraphComputer.getLeft();
         GraphComputer graphComputer = graphAndGraphComputer.getRight();
@@ -31,7 +31,7 @@ public class MainTest {
     }
 
     public void b() throws InterruptedException, ExecutionException {
-        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneSparkWithKryoHadoopGraph.newStandaloneKryoSparkComputer();
+        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneSparkWithKryoHadoopGraph.newStandaloneSparkWithKryoHadoopGraph();
 
         Graph graph = graphAndGraphComputer.getLeft();
         GraphComputer graphComputer = graphAndGraphComputer.getRight();

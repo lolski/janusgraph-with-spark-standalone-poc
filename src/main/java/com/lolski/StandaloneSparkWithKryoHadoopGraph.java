@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StandaloneSparkWithKryoHadoopGraph {
-    public static Pair<Graph, GraphComputer> newStandaloneKryoSparkComputer() {
+    public static Pair<Graph, GraphComputer> newStandaloneSparkWithKryoHadoopGraph() {
         Map<String, Object> config = newStandaloneKryoConfigurations();
         Graph graph = GraphFactory.open(config);
         GraphComputer computer = newStandaloneSparkComputer(graph);
