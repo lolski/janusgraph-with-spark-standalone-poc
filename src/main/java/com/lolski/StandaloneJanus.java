@@ -55,9 +55,10 @@ public class StandaloneJanus {
             newJanusGraph_initialiseSimpleGraphAndCommit(janusConfig);
         }
 
-        HadoopGraph hadoopGraph = newHadoopGraph(janusConfig);
+        Graph hadoopGraph = GraphFactory.open(janusConfig);
 
         GraphComputer computer = newStandaloneJanusSparkComputer(hadoopGraph);
+
         return Pair.of(hadoopGraph, computer);
     }
 
@@ -139,13 +140,5 @@ public class StandaloneJanus {
         tx.commit();
 
         return graph;
-    }
-
-    /*
-     * Open Hadoop Graph
-     */
-    public static HadoopGraph newHadoopGraph(Map<String, Object> configuration) {
-        Graph hadoopGraph = GraphFactory.open(configuration);
-        return (HadoopGraph) hadoopGraph;
     }
 }
