@@ -10,8 +10,6 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import static com.lolski.Helpers.*;
-
 /**
  * Hello world with JanusGraph & Spark Standalone!
  * This PoC works with Spark in both in memory mode (e.g. local[1]) and standalone mode (e.g. spark://127.0.0.1:5678)
@@ -29,12 +27,12 @@ public class Main {
         Graph graph = graphAndGraphComputer.getLeft();
         GraphComputer graphComputer = graphAndGraphComputer.getRight();
 
-        p("--- PROGRAM STARTING --- ");
+        System.out.println("--- PROGRAM STARTING --- ");
         graphComputer.program(PeerPressureVertexProgram.build().create(graph)).mapReduce(ClusterPopulationMapReduce.build().create());
         Future<ComputerResult> work = graphComputer.submit();
 
-        p(" result =  " + work.get().memory().get("clusterPopulation"));
-        p("--- PROGRAM ENDED --- ");
+        System.out.println(" result =  " + work.get().memory().get("clusterPopulation"));
+        System.out.println("--- PROGRAM ENDED --- ");
     }
 
     public static Pair<Graph, GraphComputer> localSparkWithKryoHadoopGraph() {

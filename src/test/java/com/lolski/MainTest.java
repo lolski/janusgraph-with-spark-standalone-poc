@@ -10,8 +10,6 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import static com.lolski.Helpers.p;
-
 /**
  * Unit test for simple Main.
  */
@@ -22,12 +20,12 @@ public class MainTest {
         Graph graph = graphAndGraphComputer.getLeft();
         GraphComputer graphComputer = graphAndGraphComputer.getRight();
 
-        p("--- PROGRAM STARTING --- ");
+        System.out.println("--- PROGRAM STARTING --- ");
         graphComputer.program(PeerPressureVertexProgram.build().create(graph)).mapReduce(ClusterPopulationMapReduce.build().create());
         Future<ComputerResult> work = graphComputer.submit();
 
-        p(" result =  " + work.get().memory().get("clusterPopulation"));
-        p("--- PROGRAM ENDED --- ");
+        System.out.println(" result =  " + work.get().memory().get("clusterPopulation"));
+        System.out.println("--- PROGRAM ENDED --- ");
     }
 
     public void b() throws InterruptedException, ExecutionException {
@@ -36,12 +34,12 @@ public class MainTest {
         Graph graph = graphAndGraphComputer.getLeft();
         GraphComputer graphComputer = graphAndGraphComputer.getRight();
 
-        p("--- PROGRAM STARTING --- ");
+        System.out.println("--- PROGRAM STARTING --- ");
         graphComputer.program(PeerPressureVertexProgram.build().create(graph)).mapReduce(ClusterPopulationMapReduce.build().create());
         Future<ComputerResult> work = graphComputer.submit();
 
-        p(" result =  " + work.get().memory().get("clusterPopulation"));
-        p("--- PROGRAM ENDED --- ");
+        System.out.println(" result =  " + work.get().memory().get("clusterPopulation"));
+        System.out.println("--- PROGRAM ENDED --- ");
     }
 
     public void c() throws InterruptedException, ExecutionException {
@@ -50,11 +48,11 @@ public class MainTest {
         Graph graph = graphAndGraphComputer.getLeft();
         GraphComputer graphComputer = graphAndGraphComputer.getRight();
 
-        p("--- PROGRAM STARTING --- ");
+        System.out.println("--- PROGRAM STARTING --- ");
         graphComputer.program(PeerPressureVertexProgram.build().create(graph)).mapReduce(ClusterPopulationMapReduce.build().create());
         Future<ComputerResult> work = graphComputer.submit();
 
-        p(" result =  " + work.get().memory().get("clusterPopulation"));
-        p("--- PROGRAM ENDED --- ");
+        System.out.println(" result =  " + work.get().memory().get("clusterPopulation"));
+        System.out.println("--- PROGRAM ENDED --- ");
     }
 }
