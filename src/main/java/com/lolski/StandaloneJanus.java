@@ -18,6 +18,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/*
+ * The StandaloneJanus class creates a setup which enables OLAP query on Apache Spark to be performed on our graph.
+ *
+ * A simple JanusGraph instance will be initialized for creating and storing a simple graph in Cassandra.
+ * It is configured in such a way, which allows a HadoopGraph "view" to be overlaid on top of  the graph. HadoopGraph
+ * supports computation to be executed with SparkGraphComputer which utilizes Apache Spark running in standalone mode
+ */
 public class StandaloneJanus {
     public static final String keyspace = "janusgraph";
     public static final String outputLocation = "/Users/lolski/Playground/janusgraph/g-out/" + System.currentTimeMillis();
