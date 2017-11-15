@@ -1,9 +1,7 @@
 package com.lolski;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.tinkerpop.gremlin.hadoop.structure.HadoopGraph;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.spark.process.computer.SparkGraphComputer;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -18,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /*
- * The StandaloneJanus class creates a setup which enables OLAP query on Apache Spark to be performed on our graph.
+ * The StandaloneSparkWithJanusHadoop class creates a setup which enables OLAP query on Apache Spark to be performed on our graph.
  *
  * A simple JanusGraph instance will be initialized for creating and storing a simple graph in Cassandra.
  * Plain ol' JanusGraph doesn't support running OLAP queries on Spark and this is where HadoopGraph comes into play.
@@ -32,7 +30,7 @@ import java.util.Map;
  * 2. A running Spark Standalone 1.6.3 (must be exactly version 1.6.3!!!!!!!!!) (1 master and slave) at spark://127.0.0.1:5678
  *    e.g., download Spark 1.6.3, and run './sbin/start-master.sh -h 127.0.0.1 -p 5678 && ./sbin/start-slave.sh spark://127.0.0.1:5678'
  */
-public class StandaloneJanus {
+public class StandaloneSparkWithJanusHadoop {
     /*
      * Cassandra and Spark configurations
      */
@@ -48,16 +46,24 @@ public class StandaloneJanus {
      * Create SparkGraphComputer for actually performing the OLAP execution
      * Return both the HadoopGraph and SparkGraphComputer
      */
-    public static Pair<Graph, GraphComputer> newStandaloneJanusSparkComputer(boolean initialize) {
-        Map<String, Object> janusConfig = newStandaloneJanusConfigurations();
+    public static Pair<Graph, GraphComputer> newStandaloneSparkWithJanusHadoopSparkComputer(boolean initialize) {
+        // janus graph and hadoop graph config
+        Map<String, Object> janusConfig = newJanusConf();
+        Map<String, Object> hadoopConfig = newHadoopGraphConfFromJanusGraphConf(janusConfig);
 
+        // initialize
         if (initialize) {
-            newJanusGraph_initialiseSimpleGraphAndCommit(janusConfig);
+            JanusGraph graph = JanusGraphFactory.open(new MapConfiguration(janusConfig));
+            JanusGraphTransaction tx = graph.newTransaction();
+            addSomeVerticesAndEdges(tx);
+            tx.commit();
+            graph.close();
         }
 
-        Graph hadoopGraph = GraphFactory.open(janusConfig);
+        // open hadoop graph
+        Graph hadoopGraph = GraphFactory.open(hadoopConfig);
 
-        GraphComputer computer = newStandaloneJanusSparkComputer(hadoopGraph);
+        GraphComputer computer = newStandaloneSparkWithJanusHadoopSparkComputerFromGraph(hadoopGraph);
 
         return Pair.of(hadoopGraph, computer);
     }
@@ -66,7 +72,7 @@ public class StandaloneJanus {
      * Create a configuration which supports Janus setup with Cassandra and Apache Spark
      * These configurations are quite lengthy and mostly undocumented
      */
-    public static Map<String, Object> newStandaloneJanusConfigurations() {
+    public static Map<String, Object> newJanusConf() {
         Map<String, Object> map = new HashMap<>();
 
         map.put("cassandra.input.keyspace", keyspace);
@@ -91,10 +97,14 @@ public class StandaloneJanus {
         return map;
     }
 
+    public static Map<String, Object> newHadoopGraphConfFromJanusGraphConf(Map<String, Object> janusConf) {
+        return janusConf;
+    }
+
     /*
      * Create a SparkGraphComputer and configure it.
      */
-    public static GraphComputer newStandaloneJanusSparkComputer(Graph graph) {
+    public static GraphComputer newStandaloneSparkWithJanusHadoopSparkComputerFromGraph(Graph graph) {
         SparkGraphComputer computer = graph.compute(SparkGraphComputer.class);
 
         computer.configure("spark.master", sparkAddress);
@@ -124,11 +134,7 @@ public class StandaloneJanus {
     /*
      * Initialise a simple graph and persist it in Cassandra
      */
-    public static Graph newJanusGraph_initialiseSimpleGraphAndCommit(Map<String, Object> configuration) {
-        Configuration config = new MapConfiguration(configuration);
-        JanusGraph graph = JanusGraphFactory.open(config);
-
-        JanusGraphTransaction tx = graph.newTransaction();
+    public static void addSomeVerticesAndEdges(JanusGraphTransaction tx) {
         Vertex wlz = tx.addVertex(T.label, "person", "name", "wong liang zan");
         Vertex ak = tx.addVertex(T.label, "person", "name", "angkur");
         Vertex ngy = tx.addVertex(T.label, "person", "name", "naq gynes");
@@ -137,8 +143,5 @@ public class StandaloneJanus {
         wlz.addEdge("boss_of", ngy);
         wlz.addEdge("boss_of", ngy);
         wlz.addEdge("boss_of", crl);
-        tx.commit();
-
-        return graph;
     }
 }
