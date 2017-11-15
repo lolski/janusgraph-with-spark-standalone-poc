@@ -106,7 +106,6 @@ public class StandaloneSparkWithJanusHadoopGraph {
         computer.configure("janusgraphmr.ioformat.conf.storage.hostname", cassandraAddress);
         computer.configure("janusgraphmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
         computer.configure("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner"); // important
-        computer.configure("HADOOP_GREMLIN_LIBS", "/Users/lolski/grakn.ai/grakn/grakn-dist/target/grakn-dist-1.0.0-SNAPSHOT/services/lib/");
         computer.configure("gremlin.hadoop.outputLocation", sparkOutputLocation); // important
         computer.configure("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
         computer.configure("gremlin.hadoop.graphReader", "org.janusgraph.hadoop.formats.cassandra.CassandraInputFormat");
