@@ -35,7 +35,7 @@ public class StandaloneSparkWithJanusHadoop {
      * Cassandra and Spark configurations
      */
     public static final String cassandraAddress = "localhost";
-    public static final String keyspace = "janusgraph";
+    public static final String keyspace = "abc";
     public static final String sparkAddress = AppConstants.SPARK_MASTER_VALUE_STANDALONE;
     // make sure to set the path as an absolute path. Spark standalone is most likely started from a different path from this program, which in that case relative path will be a problem
     public static final String sparkOutputLocation = "/Users/lolski/Playground/janusgraph/g-out/" + System.currentTimeMillis();
@@ -49,7 +49,7 @@ public class StandaloneSparkWithJanusHadoop {
     public static Pair<Graph, GraphComputer> newStandaloneSparkWithJanusHadoopSparkComputer(boolean initialize) {
         // janus graph and hadoop graph config
         Map<String, Object> janusConfig = newJanusConf();
-        Map<String, Object> hadoopConfig = newHadoopGraphConfFromJanusGraphConf(janusConfig);
+        Map<String, Object> hadoopConfig = newHadoopGraphConf();
 
         // initialize
         if (initialize) {
@@ -77,15 +77,20 @@ public class StandaloneSparkWithJanusHadoop {
 
         map.put("storage.backend", "cassandra");
         // NOTE: Seems like there's a sensible default for keyspace and host settings, which are 'janusgraph' and 'localhost', respectively.
+        map.put("storage.hostname", cassandraAddress);
+        map.put("storage.cassandra.keyspace", keyspace);
 
         return map;
     }
 
-    public static Map<String, Object> newHadoopGraphConfFromJanusGraphConf(Map<String, Object> janusConf) {
+    public static Map<String, Object> newHadoopGraphConf() {
         Map<String, Object> map = new HashMap<>();
 
         map.put("gremlin.graph", "org.apache.tinkerpop.gremlin.hadoop.structure.HadoopGraph");
         // NOTE: Seems like there's a sensible default for keyspace and host settings, which are 'janusgraph' and 'localhost', respectively.
+        // how can it work even without specifying 'storage.backend' = 'cassandra'
+        map.put("storage.hostname", cassandraAddress);
+        map.put("storage.cassandra.keyspace", keyspace);
 
         return map;
     }
@@ -99,6 +104,8 @@ public class StandaloneSparkWithJanusHadoop {
         computer.configure("spark.master", sparkAddress);
         computer.configure("spark.serializer", "org.apache.spark.serializer.KryoSerializer"); // important
         computer.configure("janusgraphmr.ioformat.conf.storage.backend", "cassandra");
+        computer.configure("janusgraphmr.ioformat.conf.storage.hostname", cassandraAddress);
+        computer.configure("janusgraphmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
         computer.configure("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner"); // important
         computer.configure("gremlin.hadoop.outputLocation", sparkOutputLocation); // important
         computer.configure("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
