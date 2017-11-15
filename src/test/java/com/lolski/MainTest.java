@@ -45,7 +45,7 @@ public class MainTest {
     }
 
     public void c() throws InterruptedException, ExecutionException {
-        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneJanus.newStandaloneJanusSparkComputer();
+        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneJanus.newStandaloneJanusSparkComputer(true);
 
         Graph graph = graphAndGraphComputer.getLeft();
         GraphComputer graphComputer = graphAndGraphComputer.getRight();

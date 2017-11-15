@@ -28,18 +28,30 @@ import java.util.UUID;
 public class StandaloneJanus {
     public static final String keyspace = "janusgraph";
     public static final String outputLocation = "/Users/lolski/Playground/janusgraph/g-out/" + System.currentTimeMillis();
-    
-    public static Pair<Graph, GraphComputer> newStandaloneJanusSparkComputer() {
-        Map<String, Object> janusConfig = newStandaloneJanusConfigurations();
-        createSimpleJanusGraph(janusConfig);
 
-        Map<String, Object> hadoopConfig = newJanusHadoopConfiguration(janusConfig);
-        HadoopGraph hadoopGraph = loadFromJanus(hadoopConfig);
+    /*
+     * Initialize a simple JanusGraph instance and persist it in Cassandra.
+     * Create HadoopGraph, which supports OLAP execution with Apache Spark
+     * Create SparkGraphComputer for actually performing the OLAP execution
+     * Return both the HadoopGraph and SparkGraphComputer
+     */
+    public static Pair<Graph, GraphComputer> newStandaloneJanusSparkComputer(boolean initialize) {
+        Map<String, Object> janusConfig = newStandaloneJanusConfigurations();
+
+        if (initialize) {
+            newJanusGraph_initialiseWithSimpleGraph(janusConfig);
+        }
+
+        HadoopGraph hadoopGraph = newHadoopGraph(janusConfig);
 
         GraphComputer computer = newStandaloneJanusSparkComputer(hadoopGraph);
         return Pair.of(hadoopGraph, computer);
     }
 
+    /*
+     * Create a configuration which supports Janus setup with Cassandra and Apache Spark
+     * These configurations are quite lengthy and mostly undocumented
+     */
     public static Map<String, Object> newStandaloneJanusConfigurations() {
         Map<String, Object> map = new HashMap<>();
 
@@ -65,12 +77,9 @@ public class StandaloneJanus {
         return map;
     }
 
-    public static Map<String, Object> newJanusHadoopConfiguration(Map<String, Object> configuration) {
-        Map<String, Object> newConfiguration = new HashMap<>(configuration);
-        newConfiguration.put(AppConstants.JANUSMR_IOFORMAT_CONF_STORAGE_CASSANDRA_KEYSPACE, keyspace);
-        return newConfiguration;
-    }
-
+    /*
+     * Create a SparkGraphComputer and configure it.
+     */
     public static GraphComputer newStandaloneJanusSparkComputer(Graph graph) {
         SparkGraphComputer computer = graph.compute(SparkGraphComputer.class);
 
@@ -98,41 +107,32 @@ public class StandaloneJanus {
         return computer;
     }
 
-    public static JanusGraph createGraphOfTheGodsGraph(Map<String, Object> configuration) {
+    /*
+     * Initialise a simple graph and persist it in Cassandra
+     */
+    public static Graph newJanusGraph_initialiseWithSimpleGraph(Map<String, Object> configuration) {
         Configuration config = new MapConfiguration(configuration);
         JanusGraph graph = JanusGraphFactory.open(config);
+
         JanusGraphTransaction tx = graph.newTransaction();
-//        GraphOfTheGodsFactory.loadWithoutMixedIndex(graph, false);
-        tx.commit();
-        return graph;
-    }
-
-    public static Graph createSimpleJanusGraph(Map<String, Object> configuration) {
-        Configuration config = new MapConfiguration(configuration);
-        JanusGraph graph = JanusGraphFactory.open(config);
-        JanusGraphTransaction tx = graph.newTransaction();
-
-//        Vertex wlz = tx.addVertex(T.label, "person", "name", "wong liang zan");
-//        Vertex ak = tx.addVertex(T.label, "person", "name", "angkur");
-//        Vertex ngy = tx.addVertex(T.label, "person", "name", "naq gynes");
-//        Vertex crl = tx.addVertex(T.label, "person", "name", "curl");
-//        wlz.addEdge("boss_of", ak);
-//        wlz.addEdge("boss_of", ngy);
-//        wlz.addEdge("boss_of", ngy);
-//        wlz.addEdge("boss_of", crl);
-
+        Vertex wlz = tx.addVertex(T.label, "person", "name", "wong liang zan");
+        Vertex ak = tx.addVertex(T.label, "person", "name", "angkur");
+        Vertex ngy = tx.addVertex(T.label, "person", "name", "naq gynes");
+        Vertex crl = tx.addVertex(T.label, "person", "name", "curl");
+        wlz.addEdge("boss_of", ak);
+        wlz.addEdge("boss_of", ngy);
+        wlz.addEdge("boss_of", ngy);
+        wlz.addEdge("boss_of", crl);
         tx.commit();
 
         return graph;
     }
-//
-    public static HadoopGraph loadFromJanus(Map<String, Object> configuration) {
+
+    /*
+     * Open Hadoop Graph
+     */
+    public static HadoopGraph newHadoopGraph(Map<String, Object> configuration) {
         Graph hadoopGraph = GraphFactory.open(configuration);
         return (HadoopGraph) hadoopGraph;
     }
-
-    public static String generateUniqueKeyspaceName() {
-        return ("wow-" + UUID.randomUUID()).replace("-", "").substring(0, 15);
-    }
-
 }

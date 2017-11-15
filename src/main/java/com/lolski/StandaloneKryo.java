@@ -41,20 +41,4 @@ public class StandaloneKryo {
 
         return computer;
     }
-
-//    public static JanusGraph createGraphOfTheGodsGraph() {
-//        JanusGraph graph = JanusGraphFactory.open(CONFIG_PROPERTIES_PATH);
-//        GraphOfTheGodsFactory.loadWithoutMixedIndex(graph, false);
-//        return graph;
-//    }
-//
-//    public static HadoopGraph loadFromJanus() {
-//        Map<String, Object> config = newStandaloneKryoConfigurations();
-//        String KEYSPACE = loadConfigProperties(CONFIG_PROPERTIES_PATH).getProperty(AppConstants.STORAGE_CASSANDRA_KEYSPACE);
-//
-//        config.put(AppConstants.JANUSMR_IOFORMAT_CONF_STORAGE_CASSANDRA_KEYSPACE, KEYSPACE);
-//        Graph hadoopGraph = GraphFactory.open(config);
-//        return (HadoopGraph) hadoopGraph;
-//    }
-
 }
