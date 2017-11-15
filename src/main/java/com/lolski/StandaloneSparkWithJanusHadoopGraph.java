@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /*
- * The StandaloneSparkWithJanusHadoop class creates a setup which enables OLAP query on Apache Spark to be performed on our graph.
+ * The StandaloneSparkWithJanusHadoopGraph class creates a setup which enables OLAP query on Apache Spark to be performed on our graph.
  *
  * A simple JanusGraph instance will be initialized for creating and storing a simple graph in Cassandra.
  * Plain ol' JanusGraph doesn't support running OLAP queries on Spark and this is where HadoopGraph comes into play.
@@ -30,14 +30,14 @@ import java.util.Map;
  * 2. A running Spark Standalone 1.6.3 (must be exactly version 1.6.3!!!!!!!!!) (1 master and slave) at spark://127.0.0.1:5678
  *    e.g., download Spark 1.6.3, and run './sbin/start-master.sh -h 127.0.0.1 -p 5678 && ./sbin/start-slave.sh spark://127.0.0.1:5678'
  */
-public class StandaloneSparkWithJanusHadoop {
+public class StandaloneSparkWithJanusHadoopGraph {
     /*
      * Cassandra and Spark configurations
      */
     public static final String cassandraAddress = "localhost";
     public static final String keyspace = "abc";
     public static final String sparkAddress = AppConstants.SPARK_MASTER_VALUE_STANDALONE;
-    // make sure to set the path as an absolute path. Spark standalone is most likely started from a different path from this program, which in that case relative path will be a problem
+    // Make sure to set the path as an absolute path. Spark standalone is most likely started from a different location when compared with this program. In that case, a relative path will be a problem
     public static final String sparkOutputLocation = "/Users/lolski/Playground/janusgraph/g-out/" + System.currentTimeMillis();
 
     /*

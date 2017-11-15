@@ -20,9 +20,9 @@ import static com.lolski.Helpers.*;
  */
 public class Main {
     public static void main( String[] args ) throws InterruptedException, ExecutionException {
-//        Pair<Graph, GraphComputer> graphAndGraphComputer = LocalKryo.newLocalKryoSparkComputer();
-//        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneKryo.newStandaloneKryoSparkComputer();
-        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneSparkWithJanusHadoop.newStandaloneSparkWithJanusHadoopSparkComputer(true);
+//        Pair<Graph, GraphComputer> graphAndGraphComputer = LocalSparkWithKryoHadoopGraph.newLocalKryoSparkComputer();
+//        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneSparkWithKryoHadoopGraph.newStandaloneKryoSparkComputer();
+        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneSparkWithJanusHadoopGraph.newStandaloneSparkWithJanusHadoopSparkComputer(true);
 
         Graph graph = graphAndGraphComputer.getLeft();
         GraphComputer graphComputer = graphAndGraphComputer.getRight();

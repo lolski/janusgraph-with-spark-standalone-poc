@@ -10,7 +10,7 @@ import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-class LocalKryo {
+class LocalSparkWithKryoHadoopGraph {
     public static Pair<Graph, GraphComputer> newLocalKryoSparkComputer() {
         Map<String, Object> config = newLocalKryoConfigurations();
         Graph graph = GraphFactory.open(config);
