@@ -43,7 +43,7 @@ public class MainTest {
     }
 
     public void c() throws InterruptedException, ExecutionException {
-        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneSparkWithJanusHadoopGraph.newStandaloneSparkWithJanusHadoopSparkComputer(true);
+        Pair<Graph, GraphComputer> graphAndGraphComputer = null;
 
         Graph graph = graphAndGraphComputer.getLeft();
         GraphComputer graphComputer = graphAndGraphComputer.getRight();

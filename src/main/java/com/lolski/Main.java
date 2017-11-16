@@ -17,12 +17,14 @@ import java.util.concurrent.Future;
  *
  */
 public class Main {
-    public static final String hadoopGremlinLibs = "/Users/lolski/grakn.ai/grakn/grakn-dist/target/grakn-dist-1.0.0-SNAPSHOT/services/lib/";
+    public static final String cassandraAddress = System.getProperty("storage.hostname") != null ? System.getProperty("storage.hostname") : "localhost";
+    public static final String sparkMasterAddress = System.getProperty("spark.master") != null ? System.getProperty("spark.master") : AppConstants.SPARK_MASTER_VALUE_STANDALONE;
+    public static final String hadoopGremlinLibs = System.getProperty("hadoop_gremlin_libs") != null ? System.getProperty("hadoop_gremlin_libs") : "/Users/lolski/grakn.ai/grakn/grakn-dist/target/grakn-dist-1.0.0-SNAPSHOT/services/lib/";
 
     public static void main( String[] args ) throws InterruptedException, ExecutionException {
 //        Pair<Graph, GraphComputer> graphAndGraphComputer = localSparkWithKryoHadoopGraph();
 //        Pair<Graph, GraphComputer> graphAndGraphComputer = standaloneSparkWithKryoHadoopGraph(hadoopGremlinLibs);
-        Pair<Graph, GraphComputer> graphAndGraphComputer = standaloneSparkWithJanusHadoopGraph(true, hadoopGremlinLibs);
+        Pair<Graph, GraphComputer> graphAndGraphComputer = standaloneSparkWithJanusHadoopGraph(true, hadoopGremlinLibs, cassandraAddress, sparkMasterAddress);
 
         Graph graph = graphAndGraphComputer.getLeft();
         GraphComputer graphComputer = graphAndGraphComputer.getRight();
@@ -44,9 +46,14 @@ public class Main {
         return StandaloneSparkWithKryoHadoopGraph.newStandaloneSparkWithKryoHadoopGraph();
     }
 
-    public static Pair<Graph, GraphComputer> standaloneSparkWithJanusHadoopGraph(boolean initialize, String hadoopGremlinLibs) {
+    public static Pair<Graph, GraphComputer> standaloneSparkWithJanusHadoopGraph(boolean initialize, String hadoopGremlinLibs, String cassandraAddress, String sparkMasterAddress) {
+        System.out.println("--- CONFIGURATIONS --- ");
+        System.out.println("- Cassandra address " + "'" + cassandraAddress + "'");
+        System.out.println("- Spark master " + "'" + sparkMasterAddress + "'");
+        System.out.println("- HADOOP_GREMLIN_LIBS " + "'" + hadoopGremlinLibs + "'");
+
         System.setProperty("HADOOP_GREMLIN_LIBS", hadoopGremlinLibs);
-        return StandaloneSparkWithJanusHadoopGraph.newStandaloneSparkWithJanusHadoopSparkComputer(initialize);
+        return StandaloneSparkWithJanusHadoopGraph.newStandaloneSparkWithJanusHadoopSparkComputer(initialize, cassandraAddress, sparkMasterAddress);
     }
 }
 
