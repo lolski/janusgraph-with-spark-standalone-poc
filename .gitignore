@@ -1,5 +1,5 @@
-.idea
-target
-janusgraph.iml
-g-out/*
-g-in/*
+janus-distributed-olap/.idea
+janus-distributed-olap/target
+janus-distributed-olap/janusgraph.iml
+janus-distributed-olap/g-out/*
+janus-distributed-olap/g-in/*
