@@ -82,29 +82,6 @@ public class StandaloneSparkWithJanusHadoopGraph {
         map.put("storage.hostname", cassandraAddress);
         map.put("storage.cassandra.keyspace", keyspace);
 
-        map.put("cassandra.input.keyspace", keyspace);
-        map.put("janusgraphmr.ioformat.conf.storage.hostname", cassandraAddress);
-        map.put("janusgraphmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
-        map.put("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner");
-        map.put("gremlin.hadoop.outputLocation", sparkOutputLocation);
-        map.put("janusmr.ioformat.conf.storage.backend", "cassandra");
-        map.put("janusmr.ioformat.cf-name", "edgestore");
-        map.put("cassandra.input.columnfamily", "edgestore");
-        map.put("janusmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
-        map.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
-        map.put("gremlin.graph", "org.apache.tinkerpop.gremlin.hadoop.structure.HadoopGraph");
-        map.put("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
-        map.put("storage.hostname", cassandraAddress);
-        map.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer"); // important
-        map.put("janusgraphmr.ioformat.conf.storage.backend", "cassandra");
-        map.put("janusmr.ioformat.conf.storage.hostname", cassandraAddress);
-        map.put("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner"); // important
-        map.put("gremlin.hadoop.outputLocation", sparkOutputLocation); // important
-        map.put("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
-        map.put("gremlin.hadoop.graphReader", "org.janusgraph.hadoop.formats.cassandra.CassandraInputFormat");
-        map.put("gremlin.hadoop.inputLocation", "none");
-        map.put("storage.backend", "cassandra");
-
         return map;
     }
 
@@ -115,29 +92,6 @@ public class StandaloneSparkWithJanusHadoopGraph {
         // how can it work even without specifying 'storage.backend' = 'cassandra'
         map.put("storage.hostname", cassandraAddress);
         map.put("storage.cassandra.keyspace", keyspace);
-
-        map.put("cassandra.input.keyspace", keyspace);
-        map.put("janusgraphmr.ioformat.conf.storage.hostname", cassandraAddress);
-        map.put("janusgraphmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
-        map.put("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner");
-        map.put("gremlin.hadoop.outputLocation", sparkOutputLocation);
-        map.put("janusmr.ioformat.conf.storage.backend", "cassandra");
-        map.put("janusmr.ioformat.cf-name", "edgestore");
-        map.put("cassandra.input.columnfamily", "edgestore");
-        map.put("janusmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
-        map.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
-        map.put("gremlin.graph", "org.apache.tinkerpop.gremlin.hadoop.structure.HadoopGraph");
-        map.put("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
-        map.put("storage.hostname", cassandraAddress);
-        map.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer"); // important
-        map.put("janusgraphmr.ioformat.conf.storage.backend", "cassandra");
-        map.put("janusmr.ioformat.conf.storage.hostname", cassandraAddress);
-        map.put("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner"); // important
-        map.put("gremlin.hadoop.outputLocation", sparkOutputLocation); // important
-        map.put("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
-        map.put("gremlin.hadoop.graphReader", "org.janusgraph.hadoop.formats.cassandra.CassandraInputFormat");
-        map.put("gremlin.hadoop.inputLocation", "none");
-        map.put("storage.backend", "cassandra");
 
         return map;
     }
@@ -157,29 +111,7 @@ public class StandaloneSparkWithJanusHadoopGraph {
         computer.configure("gremlin.hadoop.outputLocation", sparkOutputLocation); // important
         computer.configure("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
         computer.configure("gremlin.hadoop.graphReader", "org.janusgraph.hadoop.formats.cassandra.CassandraInputFormat");
-
-        computer.configure("cassandra.input.keyspace", keyspace);
-        computer.configure("janusgraphmr.ioformat.conf.storage.hostname", cassandraAddress);
-        computer.configure("janusgraphmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
-        computer.configure("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner");
-        computer.configure("gremlin.hadoop.outputLocation", sparkOutputLocation);
-        computer.configure("janusmr.ioformat.conf.storage.backend", "cassandra");
-        computer.configure("janusmr.ioformat.cf-name", "edgestore");
-        computer.configure("cassandra.input.columnfamily", "edgestore");
-        computer.configure("janusmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
-        computer.configure("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
-        computer.configure("gremlin.graph", "org.apache.tinkerpop.gremlin.hadoop.structure.HadoopGraph");
-        computer.configure("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
-        computer.configure("storage.hostname", cassandraAddress);
-        computer.configure("spark.serializer", "org.apache.spark.serializer.KryoSerializer"); // important
-        computer.configure("janusgraphmr.ioformat.conf.storage.backend", "cassandra");
-        computer.configure("janusmr.ioformat.conf.storage.hostname", cassandraAddress);
-        computer.configure("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner"); // important
-        computer.configure("gremlin.hadoop.outputLocation", sparkOutputLocation); // important
-        computer.configure("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
-        computer.configure("gremlin.hadoop.graphReader", "org.janusgraph.hadoop.formats.cassandra.CassandraInputFormat");
-        computer.configure("gremlin.hadoop.inputLocation", "none");
-        computer.configure("storage.backend", "cassandra");
+        computer.configure("fs.defaultFS", "hdfs://cassandra-node1:54310");
 
         return computer;
     }
