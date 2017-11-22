@@ -1,7 +1,7 @@
 1) fix etc host
-echo "172.17.0.2      cassandra-node1
-172.17.0.3      cassandra-node2
-172.17.0.4      cassandra-node3" >> /etc/hosts
+echo "172.17.0.2      janus-olap-node1
+172.17.0.3      janus-olap-node2
+172.17.0.4      janus-olap-node3" >> /etc/hosts
 
 2) apt install python && docker cp cassandra
 

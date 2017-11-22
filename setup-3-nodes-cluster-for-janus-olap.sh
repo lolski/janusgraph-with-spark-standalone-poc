@@ -5,13 +5,13 @@
 # ====================================================================================
 grakn_tar_fullpath=/Users/lolski/grakn.ai/grakn/grakn-dist/target/grakn-dist-1.0.0-SNAPSHOT.tar.gz
 spark_tar_fullpath=/Users/lolski/Downloads/spark-1.6.3-bin-hadoop2.6.tgz
-janus_poc_jar=/Users/lolski/Playground/janusgraph/target/janusgraph-1.0-SNAPSHOT.jar
-janus_poc_lib=/Users/lolski/Playground/janusgraph/target/lib
 hadoop_dir=/Users/lolski/Downloads/hadoop-2.6.5
+janus_poc_jar=/Users/lolski/Playground/janusgraph/janus-distributed-olap/target/janus-distributed-olap-1.0-SNAPSHOT.jar
+janus_poc_lib=/Users/lolski/Playground/janusgraph/janus-distributed-olap/target/lib
 await_cluster_ready_second=5
-node1="cassandra-node1"
-node2="cassandra-node2"
-node3="cassandra-node3"
+node1="janus-olap-node1"
+node2="janus-olap-node2"
+node3="janus-olap-node3"
 
 # ====================================================================================
 # Docker helpers
@@ -186,8 +186,8 @@ test_insert_test_data_and_check_cluster_join() {
   local master_node_ip=`docker_inspect_get_ip $node1`
   local hadoop_gremlin_libs="/grakn-dist-1.0.0-SNAPSHOT/services/lib/"
 
-  echo docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janusgraph-1.0-SNAPSHOT.jar:/janusgraph-lib/*:/hadoop/etc/hadoop/core-site.xml:/hadoop/etc/hadoop/mapred-site.xml:/hadoop/etc/hadoop/hdfs-site.xml' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
-  docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janusgraph-1.0-SNAPSHOT.jar:/janusgraph-lib/*:/hadoop/etc/hadoop/core-site.xml:/hadoop/etc/hadoop/mapred-site.xml:/hadoop/etc/hadoop/hdfs-site.xml' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
+  echo docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:/janusgraph-lib/*:/hadoop/etc/hadoop/core-site.xml:/hadoop/etc/hadoop/mapred-site.xml:/hadoop/etc/hadoop/hdfs-site.xml' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
+  docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:/janusgraph-lib/*:/hadoop/etc/hadoop/core-site.xml:/hadoop/etc/hadoop/mapred-site.xml:/hadoop/etc/hadoop/hdfs-site.xml' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
   echo "--------------------------- end check cluster join ---------------------------"
   echo ""
   echo ""
@@ -200,8 +200,8 @@ test_insert_test_data_and_check_cluster_join() {
 # ====================================================================================
 set -e
 
-test_init
-test_initiate_cluster_join
+# test_init
+# test_initiate_cluster_join
 # sleep $await_cluster_ready_second
 
 test_insert_test_data_and_check_cluster_join

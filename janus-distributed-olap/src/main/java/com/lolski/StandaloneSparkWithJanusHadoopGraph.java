@@ -111,7 +111,7 @@ public class StandaloneSparkWithJanusHadoopGraph {
         computer.configure("gremlin.hadoop.outputLocation", sparkOutputLocation); // important
         computer.configure("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
         computer.configure("gremlin.hadoop.graphReader", "org.janusgraph.hadoop.formats.cassandra.CassandraInputFormat");
-        computer.configure("fs.defaultFS", "hdfs://cassandra-node1:54310");
+        computer.configure("fs.defaultFS", "hdfs://janus-olap-node1:54310");
 
         return computer;
     }
