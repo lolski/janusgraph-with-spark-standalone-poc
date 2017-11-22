@@ -3,12 +3,26 @@
 # ====================================================================================
 # configurations
 # ====================================================================================
+
+### input ###
 grakn_tar_fullpath=/Users/lolski/grakn.ai/grakn/grakn-dist/target/grakn-dist-1.0.0-SNAPSHOT.tar.gz
 spark_tar_fullpath=/Users/lolski/Downloads/spark-1.6.3-bin-hadoop2.6.tgz
 hadoop_dir=/Users/lolski/Downloads/hadoop-2.6.5
+hadoop_preconfigured_conf_dir=./hadoop-conf
 janus_poc_jar=/Users/lolski/Playground/janusgraph/janus-distributed-olap/target/janus-distributed-olap-1.0-SNAPSHOT.jar
 janus_poc_lib=/Users/lolski/Playground/janusgraph/janus-distributed-olap/target/lib
+
+### output ###
+hadoop_conf_tmp_dir_destination=/tmp/hadoop-conf
+hadoop_dir_destination=/hadoop
+janus_poc_lib_destination=/janusgraph-lib
+
+hadoop_tmp_dir=/hadoop-tmp
+home_dir_in_docker=/root
+
 await_cluster_ready_second=5
+
+### name of docker instances ###
 node1="janus-olap-node1"
 node2="janus-olap-node2"
 node3="janus-olap-node3"
@@ -35,10 +49,10 @@ docker_run() {
 setup_ssh() {
   local NODE=$1
 
-  echo docker exec $NODE /bin/bash -c "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
-  docker exec $NODE /bin/bash -c "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
-  echo docker exec $NODE /bin/bash -c "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
-  docker exec $NODE /bin/bash -c "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
+  echo docker exec $NODE /bin/bash -c "ssh-keygen -f $home_dir_in_docker/.ssh/id_rsa -t rsa -N ''"
+  docker exec $NODE /bin/bash -c "ssh-keygen -f $home_dir_in_docker/.ssh/id_rsa -t rsa -N ''"
+  echo docker exec $NODE /bin/bash -c "cat $home_dir_in_docker/.ssh/id_rsa.pub >> $home_dir_in_docker/.ssh/authorized_keys"
+  docker exec $NODE /bin/bash -c "cat $home_dir_in_docker/.ssh/id_rsa.pub >> $home_dir_in_docker/.ssh/authorized_keys"
   echo docker exec $NODE /bin/bash -c "dpkg-reconfigure openssh-server"
   docker exec $NODE /bin/bash -c "dpkg-reconfigure openssh-server"
   echo docker exec $NODE /bin/bash -c "service ssh start"
@@ -66,21 +80,16 @@ grakn_cluster_join_and_restart() {
   echo docker exec $NODE /bin/bash -c "cd spark-1.6.3-bin-hadoop2.6 && $start_spark_cmd"
   docker exec $NODE /bin/bash -c "cd spark-1.6.3-bin-hadoop2.6 && $start_spark_cmd"
 
-  echo docker exec $NODE /bin/bash -c "mkdir /hadoop-tmp"
-  docker exec $NODE /bin/bash -c "mkdir /hadoop-tmp"
-  local hadoop_conf_dir=
-  if [ "$spark_node_type" == 'spark-master-node' ]; then
-    hadoop_conf_dir='hadoop-conf/master'
-  else
-    hadoop_conf_dir='hadoop-conf/master'
-  fi
-  echo docker cp $hadoop_conf_dir $NODE:/tmp/hadoop-conf
-  docker cp $hadoop_conf_dir $NODE:/tmp/hadoop-conf
-  echo docker exec $NODE /bin/bash -c "mv /tmp/hadoop-conf/* /hadoop/etc/hadoop/"
-  docker exec $NODE /bin/bash -c "mv /tmp/hadoop-conf/* /hadoop/etc/hadoop/"
+  echo docker exec $NODE /bin/bash -c "mkdir $hadoop_tmp_dir"
+  docker exec $NODE /bin/bash -c "mkdir $hadoop_tmp_dir"
+  local hadoop_conf_dir="$hadoop_preconfigured_conf_dir/master"
+  echo docker cp $hadoop_conf_dir $NODE:$hadoop_conf_tmp_dir_destination
+  docker cp $hadoop_conf_dir $NODE:$hadoop_conf_tmp_dir_destination
+  echo docker exec $NODE /bin/bash -c "mv $hadoop_conf_tmp_dir_destination/* $hadoop_dir_destination/etc/hadoop/"
+  docker exec $NODE /bin/bash -c "mv $hadoop_conf_tmp_dir_destination/* $hadoop_dir_destination/etc/hadoop/"
 
-  echo docker exec $NODE /bin/bash -c "cd /hadoop && ./bin/hadoop namenode -format"
-  docker exec $NODE /bin/bash -c "cd /hadoop && ./bin/hadoop namenode -format"
+  echo docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && ./bin/hadoop namenode -format"
+  docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && ./bin/hadoop namenode -format"
 }
 
 grakn_cluster_status() {
@@ -116,11 +125,11 @@ copy_distribution_into_docker_container() {
   echo docker cp $janus_poc_jar $NODE:/
   docker cp $janus_poc_jar $NODE:/
 
-  echo docker cp $janus_poc_lib $NODE:/janusgraph-lib
-  docker cp $janus_poc_lib $NODE:/janusgraph-lib
+  echo docker cp $janus_poc_lib $NODE:$janus_poc_lib_destination
+  docker cp $janus_poc_lib $NODE:$janus_poc_lib_destination
 
-  echo docker cp $hadoop_dir $NODE:/hadoop
-  docker cp $hadoop_dir $NODE:/hadoop
+  echo docker cp $hadoop_dir $NODE:$hadoop_dir_destination
+  docker cp $hadoop_dir $NODE:$hadoop_dir_destination
 }
 
 spawn_container_and_install_distribution() {
@@ -186,8 +195,8 @@ test_insert_test_data_and_check_cluster_join() {
   local master_node_ip=`docker_inspect_get_ip $node1`
   local hadoop_gremlin_libs="/grakn-dist-1.0.0-SNAPSHOT/services/lib/"
 
-  echo docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:/janusgraph-lib/*:/hadoop/etc/hadoop/core-site.xml:/hadoop/etc/hadoop/mapred-site.xml:/hadoop/etc/hadoop/hdfs-site.xml' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
-  docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:/janusgraph-lib/*:/hadoop/etc/hadoop/core-site.xml:/hadoop/etc/hadoop/mapred-site.xml:/hadoop/etc/hadoop/hdfs-site.xml' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
+  echo docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:$janus_poc_lib_destination/*:' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
+  docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:$janus_poc_lib_destination/*:' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
   echo "--------------------------- end check cluster join ---------------------------"
   echo ""
   echo ""
@@ -200,8 +209,8 @@ test_insert_test_data_and_check_cluster_join() {
 # ====================================================================================
 set -e
 
-# test_init
-# test_initiate_cluster_join
+test_init
+test_initiate_cluster_join
 # sleep $await_cluster_ready_second
 
-test_insert_test_data_and_check_cluster_join
+# test_insert_test_data_and_check_cluster_join
