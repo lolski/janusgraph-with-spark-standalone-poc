@@ -7,6 +7,7 @@ grakn_tar_fullpath=/Users/lolski/grakn.ai/grakn/grakn-dist/target/grakn-dist-1.0
 spark_tar_fullpath=/Users/lolski/Downloads/spark-1.6.3-bin-hadoop2.6.tgz
 janus_poc_jar=/Users/lolski/Playground/janusgraph/target/janusgraph-1.0-SNAPSHOT.jar
 janus_poc_lib=/Users/lolski/Playground/janusgraph/target/lib
+hadoop_dir=/Users/lolski/Downloads/hadoop-2.6.5
 await_cluster_ready_second=5
 node1="cassandra-node1"
 node2="cassandra-node2"
@@ -31,11 +32,25 @@ docker_run() {
 # ====================================================================================
 # Grakn helpers
 # ====================================================================================
+setup_ssh() {
+  local NODE=$1
+
+  echo docker exec $NODE /bin/bash -c "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
+  docker exec $NODE /bin/bash -c "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
+  echo docker exec $NODE /bin/bash -c "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
+  docker exec $NODE /bin/bash -c "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
+  echo docker exec $NODE /bin/bash -c "dpkg-reconfigure openssh-server"
+  docker exec $NODE /bin/bash -c "dpkg-reconfigure openssh-server"
+  echo docker exec $NODE /bin/bash -c "service ssh start"
+  docker exec $NODE /bin/bash -c "service ssh start"
+}
+
 grakn_cluster_join_and_restart() {
   local NODE=$1
   local cluster=$2
   local local_ip=$3
   local spark_node_type=$4
+
   echo docker exec $NODE /bin/bash -c "cd grakn-dist-1.0.0-SNAPSHOT && ./grakn cluster configure $cluster $local_ip"
   docker exec $NODE /bin/bash -c "cd grakn-dist-1.0.0-SNAPSHOT && ./grakn cluster configure $cluster $local_ip"
 
@@ -51,8 +66,21 @@ grakn_cluster_join_and_restart() {
   echo docker exec $NODE /bin/bash -c "cd spark-1.6.3-bin-hadoop2.6 && $start_spark_cmd"
   docker exec $NODE /bin/bash -c "cd spark-1.6.3-bin-hadoop2.6 && $start_spark_cmd"
 
-  # echo docker exec $NODE /bin/bash -c "cd spark-1.6.3-bin-hadoop2.6 && $start_spark_cmd"
-  # docker exec $NODE /bin/bash -c "cd spark-1.6.3-bin-hadoop2.6 && ./sbin/start-slave.sh spark://$cluster:5678"
+  echo docker exec $NODE /bin/bash -c "mkdir /hadoop-tmp"
+  docker exec $NODE /bin/bash -c "mkdir /hadoop-tmp"
+  local hadoop_conf_dir=
+  if [ "$spark_node_type" == 'spark-master-node' ]; then
+    hadoop_conf_dir='hadoop-conf/master'
+  else
+    hadoop_conf_dir='hadoop-conf/master'
+  fi
+  echo docker cp $hadoop_conf_dir $NODE:/tmp/hadoop-conf
+  docker cp $hadoop_conf_dir $NODE:/tmp/hadoop-conf
+  echo docker exec $NODE /bin/bash -c "mv /tmp/hadoop-conf/* /hadoop/etc/hadoop/"
+  docker exec $NODE /bin/bash -c "mv /tmp/hadoop-conf/* /hadoop/etc/hadoop/"
+
+  echo docker exec $NODE /bin/bash -c "cd /hadoop && ./bin/hadoop namenode -format"
+  docker exec $NODE /bin/bash -c "cd /hadoop && ./bin/hadoop namenode -format"
 }
 
 grakn_cluster_status() {
@@ -90,6 +118,9 @@ copy_distribution_into_docker_container() {
 
   echo docker cp $janus_poc_lib $NODE:/janusgraph-lib
   docker cp $janus_poc_lib $NODE:/janusgraph-lib
+
+  echo docker cp $hadoop_dir $NODE:/hadoop
+  docker cp $hadoop_dir $NODE:/hadoop
 }
 
 spawn_container_and_install_distribution() {
@@ -109,8 +140,8 @@ spawn_container_and_install_distribution() {
 
 test_init() {
   echo "--------------------------- test - init ---------------------------"
-  spawn_container_and_install_distribution $node1 $grakn_tar_fullpath $spark_tar_fullpath "-p8080:8080"
-  spawn_container_and_install_distribution $node2 $grakn_tar_fullpath $spark_tar_fullpath '-p8081:8080 -p5005:5005'
+  spawn_container_and_install_distribution $node1 $grakn_tar_fullpath $spark_tar_fullpath "-p8080:8080 -p5005:5005"
+  spawn_container_and_install_distribution $node2 $grakn_tar_fullpath $spark_tar_fullpath '-p8081:8080'
   spawn_container_and_install_distribution $node3 $grakn_tar_fullpath $spark_tar_fullpath '-p8082:8080'
   echo "--------------------------- end init ---------------------------"
   echo ""
@@ -132,12 +163,15 @@ test_cleanup() {
 # ====================================================================================
 test_initiate_cluster_join() {
   echo "--------------------------- test - initiate cluster join ---------------------------"
+  setup_ssh $node1
   local master_node_ip=`docker_inspect_get_ip $node1`
   grakn_cluster_join_and_restart $node1 $master_node_ip $master_node_ip 'spark-master-node'
 
+  setup_ssh $node2
   local node2_ip=`docker_inspect_get_ip $node2`
   grakn_cluster_join_and_restart $node2 $master_node_ip $node2_ip 'spark-slave-node'
 
+  setup_ssh $node3
   local node3_ip=`docker_inspect_get_ip $node3`
   grakn_cluster_join_and_restart $node3 $master_node_ip $node3_ip 'spark-slave-node'
   echo "--------------------------- end initiate cluster join ---------------------------"
@@ -152,8 +186,8 @@ test_insert_test_data_and_check_cluster_join() {
   local master_node_ip=`docker_inspect_get_ip $node1`
   local hadoop_gremlin_libs="/grakn-dist-1.0.0-SNAPSHOT/services/lib/"
 
-  echo docker exec $node2 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janusgraph-1.0-SNAPSHOT.jar:/janusgraph-lib/*' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
-  docker exec $node2 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janusgraph-1.0-SNAPSHOT.jar:/janusgraph-lib/*' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
+  echo docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janusgraph-1.0-SNAPSHOT.jar:/janusgraph-lib/*:/hadoop/etc/hadoop/core-site.xml:/hadoop/etc/hadoop/mapred-site.xml:/hadoop/etc/hadoop/hdfs-site.xml' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
+  docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janusgraph-1.0-SNAPSHOT.jar:/janusgraph-lib/*:/hadoop/etc/hadoop/core-site.xml:/hadoop/etc/hadoop/mapred-site.xml:/hadoop/etc/hadoop/hdfs-site.xml' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
   echo "--------------------------- end check cluster join ---------------------------"
   echo ""
   echo ""
@@ -164,28 +198,10 @@ test_insert_test_data_and_check_cluster_join() {
 # ====================================================================================
 # Main routine
 # ====================================================================================
-# 1) fix etc host
-# echo "172.17.0.2      cassandra-node1
-# 172.17.0.3      cassandra-node2
-# 172.17.0.4      cassandra-node3" >> /etc/hosts
-
-# 2) apt install python && docker cp cassandra
-
-# --- hadoop
-# docker cp hadoop-2.6.5 cassandra-node1:hadoop-2.6.5 && docker cp hadoop-2.6.5 cassandra-node2:hadoop-2.6.5 && docker cp hadoop-2.6.5 cassandra-node3:hadoop-2.6.5
-# vim etc/hadoop/hadoop-env.sh
-# JAVA_HOME=/usr/lib/jvm/java-8-oracle
-# configure *xml
-#
-
-# configure keys
-# service ssh start
-# dpkg-reconfigure openssh-server
-# s
 set -e
 
 test_init
 test_initiate_cluster_join
 # sleep $await_cluster_ready_second
 
-# test_insert_test_data_and_check_cluster_join
+test_insert_test_data_and_check_cluster_join
