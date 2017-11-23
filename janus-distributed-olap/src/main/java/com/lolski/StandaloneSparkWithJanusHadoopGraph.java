@@ -43,13 +43,13 @@ public class StandaloneSparkWithJanusHadoopGraph {
      * Return both the HadoopGraph and SparkGraphComputer
      */
     public static Pair<Graph, GraphComputer> newStandaloneSparkWithJanusHadoopSparkComputer(
-            boolean initialize, String cassandraAddress, String sparkMasterAddress, String sparkOutputLocationRoot) {
+            boolean initialize, String cassandraAddress, String sparkMasterAddress, String sparkOutputLocationRoot, String fsDefaultFS) {
 
         String sparkOutputLocation = sparkOutputLocationRoot + "/" + System.currentTimeMillis();
 
         // janus graph and hadoop graph config
-        Map<String, Object> janusConfig = newJanusConf(cassandraAddress, sparkOutputLocation);
-        Map<String, Object> hadoopConfig = newHadoopGraphConf(cassandraAddress, sparkOutputLocation);
+        Map<String, Object> janusConfig = newJanusConf(cassandraAddress);
+        Map<String, Object> hadoopConfig = newHadoopGraphConf(cassandraAddress);
 
         // initialize
         if (initialize) {
@@ -65,7 +65,7 @@ public class StandaloneSparkWithJanusHadoopGraph {
         // open hadoop graph
         Graph hadoopGraph = GraphFactory.open(hadoopConfig);
 
-        GraphComputer computer = newStandaloneSparkWithJanusHadoopSparkComputerFromGraph(hadoopGraph, cassandraAddress, sparkMasterAddress, sparkOutputLocation);
+        GraphComputer computer = newStandaloneSparkWithJanusHadoopSparkComputerFromGraph(hadoopGraph, cassandraAddress, sparkMasterAddress, sparkOutputLocation, fsDefaultFS);
 
         return Pair.of(hadoopGraph, computer);
     }
@@ -74,24 +74,28 @@ public class StandaloneSparkWithJanusHadoopGraph {
      * Create a configuration which supports Janus setup with Cassandra and Apache Spark
      * These configurations are quite lengthy and mostly undocumented
      */
-    public static Map<String, Object> newJanusConf(String cassandraAddress, String sparkOutputLocation) {
+    public static Map<String, Object> newJanusConf(String cassandraAddress) {
         Map<String, Object> map = new HashMap<>();
 
         map.put("storage.backend", "cassandra");
-        // NOTE: Seems like there's a sensible default for keyspace and host settings, which are 'janusgraph' and 'localhost', respectively.
+        // NOTE: Seems like there's a sensible default for keyspace and host settings in case we don't provide one.
+        // They seem to be 'janusgraph' and 'localhost', respectively.
         map.put("storage.hostname", cassandraAddress);
         map.put("storage.cassandra.keyspace", keyspace);
 
         return map;
     }
 
-    public static Map<String, Object> newHadoopGraphConf(String cassandraAddress, String sparkOutputLocation) {
+    public static Map<String, Object> newHadoopGraphConf(String cassandraAddress) {
         Map<String, Object> map = new HashMap<>();
         map.put("gremlin.graph", "org.apache.tinkerpop.gremlin.hadoop.structure.HadoopGraph");
-        // NOTE: Seems like there's a sensible default for keyspace and host settings, which are 'janusgraph' and 'localhost', respectively.
-        // how can it work even without specifying 'storage.backend' = 'cassandra'
+
+        // NOTE: Seems like there's a sensible default for keyspace and host settings in case we don't provide one.
+        // They seem to be 'janusgraph' and 'localhost', respectively.
         map.put("storage.hostname", cassandraAddress);
         map.put("storage.cassandra.keyspace", keyspace);
+
+        // NOTE: Also, here we're not even specifying'storage.backend' = 'cassandra', but it works. How is it possible?
 
         return map;
     }
@@ -99,19 +103,19 @@ public class StandaloneSparkWithJanusHadoopGraph {
     /*
      * Create a SparkGraphComputer and configure it.
      */
-    public static GraphComputer newStandaloneSparkWithJanusHadoopSparkComputerFromGraph(Graph graph, String cassandraAddress, String sparkMasterAddress, String sparkOutputLocation) {
+    public static GraphComputer newStandaloneSparkWithJanusHadoopSparkComputerFromGraph(Graph graph, String cassandraAddress, String sparkMasterAddress, String sparkOutputLocation, String fsDefaultFS) {
         SparkGraphComputer computer = graph.compute(SparkGraphComputer.class);
 
         computer.configure("spark.master", sparkMasterAddress);
-        computer.configure("spark.serializer", "org.apache.spark.serializer.KryoSerializer"); // important
+        computer.configure("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
         computer.configure("janusgraphmr.ioformat.conf.storage.backend", "cassandra");
         computer.configure("janusgraphmr.ioformat.conf.storage.hostname", cassandraAddress);
         computer.configure("janusgraphmr.ioformat.conf.storage.cassandra.keyspace", keyspace);
-        computer.configure("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner"); // important
-        computer.configure("gremlin.hadoop.outputLocation", sparkOutputLocation); // important
+        computer.configure("cassandra.input.partitioner.class", "org.apache.cassandra.dht.Murmur3Partitioner");
+        computer.configure("gremlin.hadoop.outputLocation", sparkOutputLocation);
         computer.configure("gremlin.hadoop.graphWriter", "org.apache.tinkerpop.gremlin.hadoop.structure.io.gryo.GryoOutputFormat");
         computer.configure("gremlin.hadoop.graphReader", "org.janusgraph.hadoop.formats.cassandra.CassandraInputFormat");
-        computer.configure("fs.defaultFS", "hdfs://janus-olap-node1:54310");
+        computer.configure("fs.defaultFS", fsDefaultFS);
 
         return computer;
     }

@@ -14,34 +14,6 @@ import java.util.concurrent.Future;
  * Unit test for simple Main.
  */
 public class MainTest {
-    public void a() throws InterruptedException, ExecutionException {
-        Pair<Graph, GraphComputer> graphAndGraphComputer = LocalSparkWithKryoHadoopGraph.newLocalSparkWithKryoHadoopGraph();
-
-        Graph graph = graphAndGraphComputer.getLeft();
-        GraphComputer graphComputer = graphAndGraphComputer.getRight();
-
-        System.out.println("--- PROGRAM STARTING --- ");
-        graphComputer.program(PeerPressureVertexProgram.build().create(graph)).mapReduce(ClusterPopulationMapReduce.build().create());
-        Future<ComputerResult> work = graphComputer.submit();
-
-        System.out.println(" result =  " + work.get().memory().get("clusterPopulation"));
-        System.out.println("--- PROGRAM ENDED --- ");
-    }
-
-    public void b() throws InterruptedException, ExecutionException {
-        Pair<Graph, GraphComputer> graphAndGraphComputer = StandaloneSparkWithKryoHadoopGraph.newStandaloneSparkWithKryoHadoopGraph();
-
-        Graph graph = graphAndGraphComputer.getLeft();
-        GraphComputer graphComputer = graphAndGraphComputer.getRight();
-
-        System.out.println("--- PROGRAM STARTING --- ");
-        graphComputer.program(PeerPressureVertexProgram.build().create(graph)).mapReduce(ClusterPopulationMapReduce.build().create());
-        Future<ComputerResult> work = graphComputer.submit();
-
-        System.out.println(" result =  " + work.get().memory().get("clusterPopulation"));
-        System.out.println("--- PROGRAM ENDED --- ");
-    }
-
     public void c() throws InterruptedException, ExecutionException {
         Pair<Graph, GraphComputer> graphAndGraphComputer = null;
 
