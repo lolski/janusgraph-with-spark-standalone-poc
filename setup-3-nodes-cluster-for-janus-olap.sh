@@ -20,15 +20,13 @@ janus_poc_lib_destination=/janusgraph-lib
 hadoop_tmp_dir=/hadoop-tmp
 home_dir_in_docker=/root
 
-await_cluster_ready_second=5
-
 ### name of docker instances ###
 node1="janus-olap-node1"
 node2="janus-olap-node2"
 node3="janus-olap-node3"
 
 # ====================================================================================
-# Docker helpers
+# Common helpers
 # ====================================================================================
 docker_inspect_get_ip() {
   docker inspect --format '{{ .NetworkSettings.IPAddress }}' $1
@@ -43,63 +41,118 @@ docker_run() {
   return $?
 }
 
+#
+# replace an occurrence of a string in a file within a container using sed
+#
+str_replace_with_sed() {
+  local NODE=$1
+  local old_string=$2
+  local new_string=$3
+  local file=$4
+
+  echo docker exec $NODE /bin/bash -c "sed -i.bak s/'$old_string'/'$new_string'/g '$file'"
+  docker exec $NODE /bin/bash -c "sed -i.bak s/'$old_string'/'$new_string'/g '$file'"
+}
+
 # ====================================================================================
-# Grakn helpers
+# SSH bullshit needed to get hadoop working
 # ====================================================================================
-setup_ssh() {
+ssh_generate_rsa_keypair_and_restart() {
   local NODE=$1
 
   echo docker exec $NODE /bin/bash -c "ssh-keygen -f $home_dir_in_docker/.ssh/id_rsa -t rsa -N ''"
   docker exec $NODE /bin/bash -c "ssh-keygen -f $home_dir_in_docker/.ssh/id_rsa -t rsa -N ''"
-  echo docker exec $NODE /bin/bash -c "cat $home_dir_in_docker/.ssh/id_rsa.pub >> $home_dir_in_docker/.ssh/authorized_keys"
-  docker exec $NODE /bin/bash -c "cat $home_dir_in_docker/.ssh/id_rsa.pub >> $home_dir_in_docker/.ssh/authorized_keys"
   echo docker exec $NODE /bin/bash -c "dpkg-reconfigure openssh-server"
   docker exec $NODE /bin/bash -c "dpkg-reconfigure openssh-server"
   echo docker exec $NODE /bin/bash -c "service ssh start"
   docker exec $NODE /bin/bash -c "service ssh start"
 }
 
-grakn_cluster_join_and_restart() {
+ssh_add_node_a_pubkey_to_node_b() {
+  local node_a=$1
+  local node_b=$2
+
+  local node_a_pubkey=`docker exec $node_a /bin/bash -c "cat $home_dir_in_docker/.ssh/id_rsa.pub"`
+
+  echo docker exec $node_b /bin/bash -c "echo '$node_a_pubkey' >> $home_dir_in_docker/.ssh/authorized_keys"
+  docker exec $node_b /bin/bash -c "echo '$node_a_pubkey' >> $home_dir_in_docker/.ssh/authorized_keys"
+}
+
+ssh_add_to_known_host() {
+  local NODE=$1
+  local hostname=$2
+
+  echo docker exec $NODE /bin/bash -c "ssh-keyscan $hostname >> $home_dir_in_docker/.ssh/known_hosts"
+  docker exec $NODE /bin/bash -c "ssh-keyscan $hostname >> $home_dir_in_docker/.ssh/known_hosts"
+}
+
+# ====================================================================================
+# Cluster helpers
+# ====================================================================================
+storage_cluster_join() {
   local NODE=$1
   local cluster=$2
   local local_ip=$3
-  local spark_node_type=$4
 
   echo docker exec $NODE /bin/bash -c "cd grakn-dist-1.0.0-SNAPSHOT && ./grakn cluster configure $cluster $local_ip"
   docker exec $NODE /bin/bash -c "cd grakn-dist-1.0.0-SNAPSHOT && ./grakn cluster configure $cluster $local_ip"
 
   echo docker exec $NODE /bin/bash -c "cd grakn-dist-1.0.0-SNAPSHOT && ./grakn server start storage"
   docker exec $NODE /bin/bash -c "cd grakn-dist-1.0.0-SNAPSHOT && ./grakn server start storage"
+}
+
+spark_cluster_join() {
+  local NODE=$1
+  local master_node_ip=$2
+  local spark_node_type=$3
 
   local start_spark_cmd=
   if [ "$spark_node_type" == 'spark-master-node' ]; then
-    start_spark_cmd="./sbin/start-master.sh -h $local_ip -p 5678"
+    start_spark_cmd="./sbin/start-master.sh -h $master_node_ip -p 5678"
   else
-    start_spark_cmd="./sbin/start-slave.sh spark://$cluster:5678"
+    start_spark_cmd="./sbin/start-slave.sh spark://$master_node_ip:5678"
   fi
+
   echo docker exec $NODE /bin/bash -c "cd spark-1.6.3-bin-hadoop2.6 && $start_spark_cmd"
   docker exec $NODE /bin/bash -c "cd spark-1.6.3-bin-hadoop2.6 && $start_spark_cmd"
+}
+
+hadoop_cluster_setup() {
+  local NODE=$1
+  local master_node_hostname=$2
+  local spark_node_type=$3
+  local slave_node_hostnames=${@:4}
 
   echo docker exec $NODE /bin/bash -c "mkdir $hadoop_tmp_dir"
   docker exec $NODE /bin/bash -c "mkdir $hadoop_tmp_dir"
+
   local hadoop_conf_dir="$hadoop_preconfigured_conf_dir/master"
   echo docker cp $hadoop_conf_dir $NODE:$hadoop_conf_tmp_dir_destination
   docker cp $hadoop_conf_dir $NODE:$hadoop_conf_tmp_dir_destination
+
   echo docker exec $NODE /bin/bash -c "mv $hadoop_conf_tmp_dir_destination/* $hadoop_dir_destination/etc/hadoop/"
   docker exec $NODE /bin/bash -c "mv $hadoop_conf_tmp_dir_destination/* $hadoop_dir_destination/etc/hadoop/"
 
   echo docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && ./bin/hadoop namenode -format"
   docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && ./bin/hadoop namenode -format"
-}
 
-grakn_cluster_status() {
-  local NODE=$1
-  local local_ip=`docker_inspect_get_ip $NODE`
+  # change config
+  str_replace_with_sed $NODE "localhost" "$master_node_hostname" "/hadoop/etc/hadoop/core-site.xml"
+  str_replace_with_sed $NODE "localhost" "$master_node_hostname" "/hadoop/etc/hadoop/mapred-site.xml"
+  str_replace_with_sed $NODE "localhost" "$master_node_hostname" "/hadoop/etc/hadoop/hdfs-site.xml"
 
-  local result=`docker exec $NODE /bin/bash -c "cd grakn-dist-1.0.0-SNAPSHOT && ./services/cassandra/nodetool status | grep $local_ip"`
+  if [ "$spark_node_type" == 'spark-master-node' ]; then
+    # start dfs
+    echo "list of slaves $slave_node_hostnames"
+    docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && echo -n > ./etc/hadoop/slaves"
+    for slave_node_hostname in $slave_node_hostnames; do
+      echo docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && echo $slave_node_hostname >> ./etc/hadoop/slaves"
+      docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && echo $slave_node_hostname >> ./etc/hadoop/slaves"
+    done
 
-  local node_status=`echo $result | awk '{print $1}'`
-  echo $node_status
+    echo docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && ./sbin/start-dfs.sh"
+    docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && ./sbin/start-dfs.sh"
+  fi
 }
 
 # ====================================================================================
@@ -132,72 +185,100 @@ copy_distribution_into_docker_container() {
   docker cp $hadoop_dir $NODE:$hadoop_dir_destination
 }
 
-spawn_container_and_install_distribution() {
+spawn_container_setup_ssh_and_install_distribution() {
   local NODE="$1"
   local grakn_tar_fullpath="$2"
   local spark_tar_fullpath="$3"
   local additional_arguments="$4"
   echo "spawning '$NODE'..."
   docker_run "$NODE" "grakn/oracle-java-8" "$additional_arguments"
+
   echo "copy distribution into '$NODE'"
   copy_distribution_into_docker_container "$NODE" "$grakn_tar_fullpath" "$spark_tar_fullpath"
 }
 
 # ====================================================================================
-# Test init and cleanup
+# Main routine: distributed olap orchestration methods
 # ====================================================================================
+execute_init_nodes() {
+  echo "--------------------------- olap - init ---------------------------"
+  spawn_container_setup_ssh_and_install_distribution $node1 $grakn_tar_fullpath $spark_tar_fullpath "-p8080:8080 -p5005:5005"
+  spawn_container_setup_ssh_and_install_distribution $node2 $grakn_tar_fullpath $spark_tar_fullpath '-p8081:8080'
+  spawn_container_setup_ssh_and_install_distribution $node3 $grakn_tar_fullpath $spark_tar_fullpath '-p8082:8080'
 
-test_init() {
-  echo "--------------------------- test - init ---------------------------"
-  spawn_container_and_install_distribution $node1 $grakn_tar_fullpath $spark_tar_fullpath "-p8080:8080 -p5005:5005"
-  spawn_container_and_install_distribution $node2 $grakn_tar_fullpath $spark_tar_fullpath '-p8081:8080'
-  spawn_container_and_install_distribution $node3 $grakn_tar_fullpath $spark_tar_fullpath '-p8082:8080'
+  local node1_ip=`docker_inspect_get_ip $node1`
+  local node1_hostname=`docker exec $node1 /bin/hostname`
+  local node2_ip=`docker_inspect_get_ip $node2`
+  local node2_hostname=`docker exec $node2 /bin/hostname`
+  local node3_ip=`docker_inspect_get_ip $node3`
+  local node3_hostname=`docker exec $node3 /bin/hostname`
+
+  docker exec $node1 /bin/bash -c "echo $node1_ip $node1_hostname >> /etc/hosts"
+  docker exec $node1 /bin/bash -c "echo $node2_ip $node2_hostname >> /etc/hosts"
+  docker exec $node1 /bin/bash -c "echo $node3_ip $node3_hostname >> /etc/hosts"
+  docker exec $node2 /bin/bash -c "echo $node1_ip $node1_hostname >> /etc/hosts"
+  docker exec $node2 /bin/bash -c "echo $node2_ip $node2_hostname >> /etc/hosts"
+  docker exec $node2 /bin/bash -c "echo $node3_ip $node3_hostname >> /etc/hosts"
+  docker exec $node3 /bin/bash -c "echo $node1_ip $node1_hostname >> /etc/hosts"
+  docker exec $node3 /bin/bash -c "echo $node2_ip $node2_hostname >> /etc/hosts"
+  docker exec $node3 /bin/bash -c "echo $node3_ip $node3_hostname >> /etc/hosts"
+
+  ssh_generate_rsa_keypair_and_restart $node1
+  ssh_generate_rsa_keypair_and_restart $node2
+  ssh_generate_rsa_keypair_and_restart $node3
+
+  ssh_add_node_a_pubkey_to_node_b $node1 $node2
+  ssh_add_to_known_host $node2 $node1_hostname
+  ssh_add_node_a_pubkey_to_node_b $node1 $node3
+  ssh_add_to_known_host $node3 $node1_hostname
+  ssh_add_node_a_pubkey_to_node_b $node1 $node1
+  ssh_add_to_known_host $node1 $node1_hostname
+  ssh_add_node_a_pubkey_to_node_b $node2 $node1
+  ssh_add_to_known_host $node1 $node2_hostname
+  ssh_add_node_a_pubkey_to_node_b $node3 $node1
+  ssh_add_to_known_host $node1 $node3_hostname
+
   echo "--------------------------- end init ---------------------------"
   echo ""
   echo ""
 }
 
-test_cleanup() {
-  echo "--------------------------- test - cleanup ---------------------------"
-  docker kill $node1
-  docker kill $node2
-  docker kill $node3
-  echo "--------------------------- end cleanup ---------------------------"
-  echo ""
-  echo ""
-}
-
-# ====================================================================================
-# Main routine: test orchestration methods
-# ====================================================================================
-test_initiate_cluster_join() {
-  echo "--------------------------- test - initiate cluster join ---------------------------"
-  setup_ssh $node1
+execute_cluster_join() {
+  echo "--------------------------- olap - initiate cluster join ---------------------------"
   local master_node_ip=`docker_inspect_get_ip $node1`
-  grakn_cluster_join_and_restart $node1 $master_node_ip $master_node_ip 'spark-master-node'
-
-  setup_ssh $node2
+  local master_node_hostname=`docker exec $node1 /bin/hostname`
   local node2_ip=`docker_inspect_get_ip $node2`
-  grakn_cluster_join_and_restart $node2 $master_node_ip $node2_ip 'spark-slave-node'
-
-  setup_ssh $node3
+  local node2_hostname=`docker exec $node2 /bin/hostname`
   local node3_ip=`docker_inspect_get_ip $node3`
-  grakn_cluster_join_and_restart $node3 $master_node_ip $node3_ip 'spark-slave-node'
+  local node3_hostname=`docker exec $node3 /bin/hostname`
+
+  storage_cluster_join $node1 $master_node_ip $master_node_ip
+  storage_cluster_join $node2 $master_node_ip $node2_ip
+  storage_cluster_join $node3 $master_node_ip $node3_ip
+
+  spark_cluster_join $node1 $master_node_ip 'spark-master-node'
+  spark_cluster_join $node2 $master_node_ip 'spark-slave-node'
+  spark_cluster_join $node3 $master_node_ip 'spark-slave-node'
+
+  hadoop_cluster_setup $node2 $master_node_hostname 'spark-slave-node'
+  hadoop_cluster_setup $node3 $master_node_hostname 'spark-slave-node'
+  hadoop_cluster_setup $node1 $master_node_hostname 'spark-master-node' $node2_hostname $node3_hostname
+
   echo "--------------------------- end initiate cluster join ---------------------------"
   echo ""
   echo ""
 }
 
-test_insert_test_data_and_check_cluster_join() {
+execute_distributed_olap() {
   local return_value=
 
-  echo "--------------------------- test - check cluster join ---------------------------"
+  echo "--------------------------- olap - execute_distributed_olap ---------------------------"
   local master_node_ip=`docker_inspect_get_ip $node1`
   local hadoop_gremlin_libs="/grakn-dist-1.0.0-SNAPSHOT/services/lib/"
 
-  echo docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:$janus_poc_lib_destination/*:' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
-  docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:$janus_poc_lib_destination/*:' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dpre_initialize_graph com.lolski.Main"
-  echo "--------------------------- end check cluster join ---------------------------"
+  echo docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:$janus_poc_lib_destination/*:' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dfs.defaultFS=hdfs://janus-olap-node1:54310 -Dpre_initialize_graph com.lolski.Main"
+  docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:$janus_poc_lib_destination/*:' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dfs.defaultFS=hdfs://janus-olap-node1:54310 -Dpre_initialize_graph com.lolski.Main"
+  echo "--------------------------- end execute_distributed_olap ---------------------------"
   echo ""
   echo ""
 
@@ -209,8 +290,6 @@ test_insert_test_data_and_check_cluster_join() {
 # ====================================================================================
 set -e
 
-test_init
-test_initiate_cluster_join
-# sleep $await_cluster_ready_second
-
-# test_insert_test_data_and_check_cluster_join
+execute_init_nodes
+execute_cluster_join
+execute_distributed_olap
