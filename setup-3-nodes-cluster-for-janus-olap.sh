@@ -8,9 +8,10 @@
 grakn_tar_fullpath=/Users/lolski/grakn.ai/grakn/grakn-dist/target/grakn-dist-1.0.0-SNAPSHOT.tar.gz
 spark_tar_fullpath=/Users/lolski/Downloads/spark-1.6.3-bin-hadoop2.6.tgz
 hadoop_dir=/Users/lolski/Downloads/hadoop-2.6.5
+
 hadoop_preconfigured_conf_dir=./hadoop-conf
-janus_poc_jar=/Users/lolski/Playground/janusgraph/janus-distributed-olap/target/janus-distributed-olap-1.0-SNAPSHOT.jar
-janus_poc_lib=/Users/lolski/Playground/janusgraph/janus-distributed-olap/target/lib
+janus_poc_jar=./janus-distributed-olap/target/janus-distributed-olap-1.0-SNAPSHOT.jar
+janus_poc_lib=./janus-distributed-olap/target/lib
 
 ### output ###
 hadoop_conf_tmp_dir_destination=/tmp/hadoop-conf

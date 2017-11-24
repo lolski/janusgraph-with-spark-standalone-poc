@@ -12,3 +12,38 @@ c0c9e4fef1bc        grakn/oracle-java-8   "/sbin/my_init"     4 minutes ago     
 96e3d3be6b0c        grakn/oracle-java-8   "/sbin/my_init"     4 minutes ago       Up 4 minutes        0.0.0.0:8081->8080/tcp                           janus-olap-node2
 a3bc57780c5a        grakn/oracle-java-8   "/sbin/my_init"     4 minutes ago       Up 4 minutes        0.0.0.0:5005->5005/tcp, 0.0.0.0:8080->8080/tcp   janus-olap-node1
 ```
+
+## Prerequisites
+### Install Docker
+Get the Docker Community Edition for your operating system at http://docker.com
+
+### Build The Docker Image
+Build the image `grakn/oracle-java-8:latest` which is required for this project
+```
+cd docker-grakn-oracle-java-8
+docker build -t grakn/oracle-java-8:latest .
+```
+
+### Build Janus-Distributed-OLAP Java Program
+```
+cd janus-distributed-olap
+mvn package -T 2.5C -DskipTests=true
+```
+
+### Download the depencencies
+1. Hadoop 2.6.5
+2. Spark 1.6.3
+
+## Configuration
+The path pointing to a Grakn distribution, Hadoop
+```
+# ====================================================================================
+# configurations
+# ====================================================================================
+
+### input ###
+grakn_tar_fullpath=/Users/lolski/grakn.ai/grakn/grakn-dist/target/grakn-dist-1.0.0-SNAPSHOT.tar.gz
+spark_tar_fullpath=/Users/lolski/Downloads/spark-1.6.3-bin-hadoop2.6.tgz
+hadoop_dir=/Users/lolski/Downloads/hadoop-2.6.5
+
+```
