@@ -32,6 +32,12 @@ cd docker-grakn-oracle-java-8
 docker build -t grakn/oracle-java-8:latest .
 ```
 
+### Build Grakn with Cluster Capabilities
+```
+cd /path/to/grakn/repository
+mvn package -T 2.5C -DskipTests=true
+```
+
 ### Build Janus-Distributed-OLAP Java Program
 ```
 cd janus-distributed-olap
@@ -45,14 +51,14 @@ mvn package -T 2.5C -DskipTests=true
 Yes. The you have to get the version exactly right as otherwise it won't be compatible with the JanusGraph 0.2.0 which are used by the Janus-Distributed-OLAP Java program.
 
 ## Script Configuration
-The path pointing to a Grakn distribution, Hadoop
+Configure the path to Grakn, Hadoop, and Spark which we have built and download at the configuration section of `setup-3-nodes-cluster-for-janus-olap.sh`
 ```
 # ====================================================================================
 # configurations
 # ====================================================================================
 
 ### input ###
-grakn_tar_fullpath=/Users/lolski/grakn.ai/grakn/grakn-dist/target/grakn-dist-1.0.0-SNAPSHOT.tar.gz
+grakn_tar_fullpath=/path/to/grakn/repository/grakn-dist/target/grakn-dist-1.0.0-SNAPSHOT.tar.gz
 spark_tar_fullpath=/Users/lolski/Downloads/spark-1.6.3-bin-hadoop2.6.tgz
 hadoop_dir=/Users/lolski/Downloads/hadoop-2.6.5
 
