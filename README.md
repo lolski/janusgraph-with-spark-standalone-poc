@@ -19,7 +19,7 @@ c0c9e4fef1bc        grakn/oracle-java-8   "/sbin/my_init"     4 minutes ago     
 a3bc57780c5a        grakn/oracle-java-8   "/sbin/my_init"     4 minutes ago       Up 4 minutes        0.0.0.0:5005->5005/tcp, 0.0.0.0:8080->8080/tcp   janus-olap-node1
 ```
 
-### Where to look
+### Point of Interests
 1. The bash script `setup-3-nodes-cluster-for-janus-olap.sh` should contain the necessary step for configuring a Spark and Hadoop Cluster
 2. The Java program in `janus-distributed-olap` should contain the necessary minimal configuration to get Janus, Cassandra and Spark + Hadoop talking.
 
@@ -31,7 +31,7 @@ An execution takes around 3-5 minutes, and once finished it will print some resu
 Get the Docker Community Edition for your operating system at http://docker.com
 
 ### Build The Docker Image
-Build the image `grakn/oracle-java-8:latest` which is required for this project
+Build the image `grakn/oracle-java-8:latest` which is required for this project. This docker contains basic dependencies such as Java 8 and SSH
 ```
 cd docker-grakn-oracle-java-8
 docker build -t grakn/oracle-java-8:latest .
