@@ -1,7 +1,10 @@
 # Janus Distributed OLAP Proof of Concept
-When started, this script will spawn three docker instances, setup a hadoop and spark cluster, and start a program "janus-distributed-olap" which then does a distributed OLAP operation on the cluster.
+The main entry point is the script `setup-3-nodes-cluster-for-janus-olap.sh`. When started, this script will configure a cluster - it will spawn three docker instances and setup a cassandra, hadoop and spark cluster automatically. Once done, it start a program `janus-distributed-olap` on the first node (i.e. `janus-olap-node1`, which then does a distributed OLAP operation on the cluster.
 
-This is how the docker instances will be configured. The port 8080 is open so you can go to localhost:8080 to view the Spark dashboard. Addiionally, the port 5005 is open on the master host for remote debugging purpose.
+## Cluster Configuration
+Spark and Hadoop are configured in a master-slave fashion. The instance `janus-olap-node1` hosts Spark and Hadoop master while `janus-olap-node2` and `janus-olap-node3` host the slaves. The slave instances are where the OLAP operation will take place. Cassandra is clustered across the three instances in a multi-master setup.
+
+The port 8080 is open so you can go to localhost:8080 to view the Spark dashboard. Additionally, the port 5005 is open on the master host for remote debugging purpose.
 ```
 ~/grakn.ai/janus-dsistributed-olap-poc(master*) » docker ps
 CONTAINER ID        IMAGE                 COMMAND             CREATED             STATUS              PORTS                                            NAMES
