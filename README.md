@@ -1,5 +1,9 @@
 # Janus Distributed OLAP Proof of Concept
-This project contains 3 things. A bash script, a Java project and a Grakn Docker image.
+This project contains 3 things:
+1. A bash script `setup-3-nodes-cluster-for-janus-olap.sh`
+2. a Java project `janus-distributed-olap`
+3. A Grakn Docker image on `docker-grakn-oracle-java-8`
+
 The main entry point is the script `setup-3-nodes-cluster-for-janus-olap.sh`. When started, this script will configure a cluster - it will spawn three docker instances and setup a cassandra, hadoop and spark cluster automatically. Afterwards it will start the Janus Distributed OLAP Java program on the first node (i.e. `janus-olap-node1`, which then does a distributed OLAP operation on the cluster.
 
 ## Cluster Configuration
