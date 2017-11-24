@@ -1,4 +1,6 @@
 # Janus Distributed OLAP Proof of Concept
+Setting up a proper Cassandra-backed JanusGraph with Distributed OLAP capability is hard. It involves setting up a Cassandra Apache Spark and Hadoop cluster, making sure the versions are all compatible, and adding various Janus configurations that's not well-documented. I've walked the bloody path and this project serves as a reference so others need not do the same.
+
 This project contains 3 things:
 1. A bash script `setup-3-nodes-cluster-for-janus-olap.sh`
 2. a Java project `janus-distributed-olap`
