@@ -117,6 +117,35 @@ spark_cluster_join() {
   docker exec $NODE /bin/bash -c "cd spark-1.6.3-bin-hadoop2.6 && $start_spark_cmd"
 }
 
+hadoop_cluster_setup_configuration() {
+  local NODE=$1
+  local master_node_hostname=$2
+
+  local hadoop_conf_dir="$hadoop_preconfigured_conf_dir/master"
+  echo docker cp $hadoop_conf_dir $NODE:$hadoop_conf_tmp_dir_destination
+  docker cp $hadoop_conf_dir $NODE:$hadoop_conf_tmp_dir_destination
+
+  echo docker exec $NODE /bin/bash -c "mv $hadoop_conf_tmp_dir_destination/* $hadoop_dir_destination/etc/hadoop/"
+  docker exec $NODE /bin/bash -c "mv $hadoop_conf_tmp_dir_destination/* $hadoop_dir_destination/etc/hadoop/"
+
+  # change config
+  str_replace_with_sed $NODE "localhost" "$master_node_hostname" "/hadoop/etc/hadoop/core-site.xml"
+  str_replace_with_sed $NODE "localhost" "$master_node_hostname" "/hadoop/etc/hadoop/mapred-site.xml"
+  str_replace_with_sed $NODE "localhost" "$master_node_hostname" "/hadoop/etc/hadoop/hdfs-site.xml"
+}
+
+hadoop_cluster_setup_register_slave_nodes() {
+  local NODE=$1
+  local slave_node_hostnames=${@:2}
+
+  echo "list of slaves $slave_node_hostnames"
+  docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && echo -n > ./etc/hadoop/slaves"
+  for slave_node_hostname in $slave_node_hostnames; do
+    echo docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && echo $slave_node_hostname >> ./etc/hadoop/slaves"
+    docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && echo $slave_node_hostname >> ./etc/hadoop/slaves"
+  done
+}
+
 hadoop_cluster_setup() {
   local NODE=$1
   local master_node_hostname=$2
@@ -126,30 +155,15 @@ hadoop_cluster_setup() {
   echo docker exec $NODE /bin/bash -c "mkdir $hadoop_tmp_dir"
   docker exec $NODE /bin/bash -c "mkdir $hadoop_tmp_dir"
 
-  local hadoop_conf_dir="$hadoop_preconfigured_conf_dir/master"
-  echo docker cp $hadoop_conf_dir $NODE:$hadoop_conf_tmp_dir_destination
-  docker cp $hadoop_conf_dir $NODE:$hadoop_conf_tmp_dir_destination
-
-  echo docker exec $NODE /bin/bash -c "mv $hadoop_conf_tmp_dir_destination/* $hadoop_dir_destination/etc/hadoop/"
-  docker exec $NODE /bin/bash -c "mv $hadoop_conf_tmp_dir_destination/* $hadoop_dir_destination/etc/hadoop/"
+  hadoop_cluster_setup_configuration $NODE $master_node_hostname
 
   echo docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && ./bin/hadoop namenode -format"
   docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && ./bin/hadoop namenode -format"
 
-  # change config
-  str_replace_with_sed $NODE "localhost" "$master_node_hostname" "/hadoop/etc/hadoop/core-site.xml"
-  str_replace_with_sed $NODE "localhost" "$master_node_hostname" "/hadoop/etc/hadoop/mapred-site.xml"
-  str_replace_with_sed $NODE "localhost" "$master_node_hostname" "/hadoop/etc/hadoop/hdfs-site.xml"
-
   if [ "$spark_node_type" == 'spark-master-node' ]; then
-    # start dfs
-    echo "list of slaves $slave_node_hostnames"
-    docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && echo -n > ./etc/hadoop/slaves"
-    for slave_node_hostname in $slave_node_hostnames; do
-      echo docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && echo $slave_node_hostname >> ./etc/hadoop/slaves"
-      docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && echo $slave_node_hostname >> ./etc/hadoop/slaves"
-    done
+    hadoop_cluster_setup_register_slave_nodes $NODE $slave_node_hostnames
 
+    # start dfs
     echo docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && ./sbin/start-dfs.sh"
     docker exec $NODE /bin/bash -c "cd $hadoop_dir_destination && ./sbin/start-dfs.sh"
   fi
