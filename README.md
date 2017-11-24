@@ -4,7 +4,9 @@ This project contains 3 things:
 2. a Java project `janus-distributed-olap`
 3. A Grakn Docker image on `docker-grakn-oracle-java-8`
 
-The main entry point is the script `setup-3-nodes-cluster-for-janus-olap.sh`. When started, this script will configure a cluster - it will spawn three docker instances and setup a cassandra, hadoop and spark cluster automatically. Afterwards it will start the Janus Distributed OLAP Java program on the first node (i.e. `janus-olap-node1`, which then does a distributed OLAP operation on the cluster.
+The main entry point is the script `setup-3-nodes-cluster-for-janus-olap.sh`. When started, this script will configure a cassandra, hadoop, and spark cluster automatically across three docker instances. Afterwards it will start the Janus Distributed OLAP Java program on the first node (i.e. `janus-olap-node1`, which then does a distributed OLAP operation on the cluster.
+
+An execution takes around 3-5 minutes, and once finished it will print some result, e.g., `result =  {4096=4}` which indicates a success. An empty result `result =  {}` or a halted execution indicates a failure
 
 ## Cluster Configuration
 Spark and Hadoop are configured in a master-slave fashion. The instance `janus-olap-node1` hosts Spark and Hadoop master while `janus-olap-node2` and `janus-olap-node3` host the slaves. The slave instances are where the OLAP operation will take place. Cassandra is clustered across the three instances in a multi-master setup.
