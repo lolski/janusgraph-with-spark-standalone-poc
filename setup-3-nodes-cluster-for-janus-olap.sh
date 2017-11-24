@@ -3,12 +3,13 @@
 # ====================================================================================
 # configurations
 # ====================================================================================
-
-### input ###
 grakn_tar_fullpath=/Users/lolski/grakn.ai/grakn/grakn-dist/target/grakn-dist-1.0.0-SNAPSHOT.tar.gz
 spark_tar_fullpath=/Users/lolski/Downloads/spark-1.6.3-bin-hadoop2.6.tgz
 hadoop_dir=/Users/lolski/Downloads/hadoop-2.6.5
-
+java_distributed_olap_debug_flag='' # enable remote debuging on port 5005 by using this value: '-Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005'
+# ====================================================================================
+# constants and global variables (need not be customized)
+# ====================================================================================
 hadoop_preconfigured_conf_dir=./hadoop-conf
 janus_poc_jar=./janus-distributed-olap/target/janus-distributed-olap-1.0-SNAPSHOT.jar
 janus_poc_lib=./janus-distributed-olap/target/lib
@@ -291,8 +292,8 @@ execute_distributed_olap() {
   local master_node_ip=`docker_inspect_get_ip $node1`
   local hadoop_gremlin_libs="/grakn-dist-1.0.0-SNAPSHOT/services/lib/"
 
-  echo docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:$janus_poc_lib_destination/*:' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dfs.defaultFS=hdfs://janus-olap-node1:54310 -Dpre_initialize_graph com.lolski.Main"
-  docker exec $node1 /bin/bash -c "java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:$janus_poc_lib_destination/*:' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dfs.defaultFS=hdfs://janus-olap-node1:54310 -Dpre_initialize_graph com.lolski.Main"
+  echo docker exec $node1 /bin/bash -c "java $java_distributed_olap_debug_flag -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:$janus_poc_lib_destination/*:' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dfs.defaultFS=hdfs://janus-olap-node1:54310 -Dpre_initialize_graph com.lolski.Main"
+  docker exec $node1 /bin/bash -c "java $java_distributed_olap_debug_flag -cp '/janus-distributed-olap-1.0-SNAPSHOT.jar:$janus_poc_lib_destination/*:' -Dspark_output_location_root=/out -Dhadoop_gremlin_libs=$hadoop_gremlin_libs -Dspark.master=spark://$master_node_ip:5678 -Dstorage.hostname=$master_node_ip -Dfs.defaultFS=hdfs://janus-olap-node1:54310 -Dpre_initialize_graph com.lolski.Main"
   echo "--------------------------- end execute_distributed_olap ---------------------------"
   echo ""
   echo ""

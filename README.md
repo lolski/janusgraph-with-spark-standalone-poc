@@ -63,3 +63,9 @@ spark_tar_fullpath=/Users/lolski/Downloads/spark-1.6.3-bin-hadoop2.6.tgz
 hadoop_dir=/Users/lolski/Downloads/hadoop-2.6.5
 
 ```
+
+## Running
+`./setup-3-nodes-cluster-for-janus-olap.sh`
+
+## Cleanup
+`docker kill janus-olap-node1 janus-olap-node2 janus-olap-node3`
