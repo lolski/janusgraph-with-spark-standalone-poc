@@ -10,9 +10,6 @@ This project contains 3 things:
 1. The bash script `setup-3-nodes-cluster-for-janus-olap.sh` should contain the necessary step for configuring a Spark and Hadoop Cluster
 2. The Java program in `janus-distributed-olap` should contain the necessary minimal configuration to get Janus, Cassandra and Spark + Hadoop talking.
 
-### Expected Result
-An execution takes around 3-5 minutes, and once finished it will print some result, e.g., `result =  {4096=4}` which indicates a success. An empty result `result =  {}` or a halted execution indicates a failure
-
 ## Prerequisites
 ### Install Docker
 Get the Docker Community Edition for your operating system at http://docker.com
@@ -53,11 +50,9 @@ Configure the path to Grakn, Hadoop, and Spark which we have built and download 
 grakn_tar_fullpath=/path/to/grakn/repository/grakn-dist/target/grakn-dist-1.0.0-SNAPSHOT.tar.gz
 spark_tar_fullpath=/Users/lolski/Downloads/spark-1.6.3-bin-hadoop2.6.tgz
 hadoop_dir=/Users/lolski/Downloads/hadoop-2.6.5
-
 ```
 
 ## Running
-It takes one command to do it.
 ```
 ./setup-3-nodes-cluster-for-janus-olap.sh
 ```
@@ -74,6 +69,9 @@ c0c9e4fef1bc        grakn/oracle-java-8   "/sbin/my_init"     4 minutes ago     
 96e3d3be6b0c        grakn/oracle-java-8   "/sbin/my_init"     4 minutes ago       Up 4 minutes        0.0.0.0:8081->8080/tcp                           janus-olap-node2
 a3bc57780c5a        grakn/oracle-java-8   "/sbin/my_init"     4 minutes ago       Up 4 minutes        0.0.0.0:5005->5005/tcp, 0.0.0.0:8080->8080/tcp   janus-olap-node1
 ```
+
+### Expected Result
+An execution takes around 3-5 minutes, and once finished it will print some result, e.g., `result =  {4096=4}` which indicates a success. An empty result `result =  {}` or a halted execution indicates a failure
 
 ## Cleanup
 `docker kill janus-olap-node1 janus-olap-node2 janus-olap-node3`
