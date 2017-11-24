@@ -3,8 +3,12 @@ Setting up a proper Cassandra-backed JanusGraph with Distributed OLAP capability
 
 This project contains 3 things:
 1. A bash script `setup-3-nodes-cluster-for-janus-olap.sh`
-2. a Java project `janus-distributed-olap`
-3. A Grakn Docker image on `docker-grakn-oracle-java-8`
+2. a Java project under `janus-distributed-olap`
+3. A Grakn Java 8 Dockerfile inside `docker-grakn-oracle-java-8`
+
+The main entry point is the script `setup-3-nodes-cluster-for-janus-olap.sh`. When started, this script will configure a cassandra, hadoop, and spark cluster automatically across three docker instances. Afterwards it will start the Janus Distributed OLAP Java program on the first node (i.e. `janus-olap-node1`, which then does a distributed OLAP operation on the cluster.
+
+Spark and Hadoop are configured in a master-slave fashion. The instance `janus-olap-node1` hosts Spark and Hadoop master while `janus-olap-node2` and `janus-olap-node3` host the slaves. The slave instances are where the OLAP operation will take place. Cassandra is clustered across the three instances in a multi-master setup.
 
 ### Point of Interests
 1. The bash script `setup-3-nodes-cluster-for-janus-olap.sh` should contain the necessary step for configuring a Spark and Hadoop Cluster
@@ -56,10 +60,6 @@ hadoop_dir=/Users/lolski/Downloads/hadoop-2.6.5
 ```
 ./setup-3-nodes-cluster-for-janus-olap.sh
 ```
-
-The main entry point is the script `setup-3-nodes-cluster-for-janus-olap.sh`. When started, this script will configure a cassandra, hadoop, and spark cluster automatically across three docker instances. Afterwards it will start the Janus Distributed OLAP Java program on the first node (i.e. `janus-olap-node1`, which then does a distributed OLAP operation on the cluster.
-
-Spark and Hadoop are configured in a master-slave fashion. The instance `janus-olap-node1` hosts Spark and Hadoop master while `janus-olap-node2` and `janus-olap-node3` host the slaves. The slave instances are where the OLAP operation will take place. Cassandra is clustered across the three instances in a multi-master setup.
 
 The port 8080 is open so you can go to localhost:8080 to view the Spark dashboard. Additionally, the port 5005 is open on the master host for remote debugging purpose.
 ```
