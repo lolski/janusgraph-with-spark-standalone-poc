@@ -6,6 +6,7 @@ This project contains 3 things:
 
 The main entry point is the script `setup-3-nodes-cluster-for-janus-olap.sh`. When started, this script will configure a cassandra, hadoop, and spark cluster automatically across three docker instances. Afterwards it will start the Janus Distributed OLAP Java program on the first node (i.e. `janus-olap-node1`, which then does a distributed OLAP operation on the cluster.
 
+### Expected Result
 An execution takes around 3-5 minutes, and once finished it will print some result, e.g., `result =  {4096=4}` which indicates a success. An empty result `result =  {}` or a halted execution indicates a failure
 
 ## Cluster Configuration
